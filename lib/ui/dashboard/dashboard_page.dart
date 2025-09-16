@@ -24,8 +24,8 @@ class GroceryDashBoardScreen extends StatefulWidget {
 }
 
 class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
-  late List<ProductModel> mFavouriteList;
-  late List<ProductModel> mCartList;
+  // late List<ProductModel> mFavouriteList;
+  // late List<ProductModel> mCartList;
 
   List<IconData> listImage = [
     Icons.insert_drive_file,
