@@ -39,9 +39,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   cupertino_icons: ^1.0.8
-
+  html: ^0.15.4
+  nb_utils: ^6.1.2
       # 📡 Gọi API REST
   http: ^1.2.2
+
 
       # 🖼 Load ảnh sản phẩm từ link (nếu cần)
     #cached_network_image: ^3.3.1
@@ -69,6 +71,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/images/
+    - assets/images/grocery/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

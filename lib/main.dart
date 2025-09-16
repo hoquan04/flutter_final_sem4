@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_sem4/ui/dashboard/dashboard_page.dart';
 import 'package:flutter_final_sem4/ui/home/home_page.dart';
 
 
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home:  GroceryDashBoardScreen(),
     );
   }
 }

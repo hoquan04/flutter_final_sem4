@@ -1,0 +1,41 @@
+import 'package:flutter_final_sem4/utils/GroceryConstant.dart';
+
+const Grocery_ic_DeliveryBoy = "$BaseImgUrl/images/grocery/Grocery_ic_DeliveryBoy.jpg";
+const Grocery_ic_Profile = "$BaseImgUrl/images/grocery/Grocery_ic_Profile.jpg";
+const grocery_ic_user1 = "$BaseImgUrl/images/grocery/grocery_ic_user1.png";
+const grocery_ic_user2 = "$BaseImgUrl/images/grocery/grocery_ic_user2.png";
+const grocery_ic_user3 = "$BaseImgUrl/images/grocery/grocery_ic_user3.png";
+const grocery_ic_bell_paper = "$BaseImgUrl/images/grocery/grocery_ic_bell_paper.jpeg";
+const grocery_ic_ginger = "$BaseImgUrl/images/grocery/grocery_ic_ginger.png";
+const grocery_ic_graps = "$BaseImgUrl/images/grocery/grocery_ic_graps.png";
+const grocery_ic_apple = "$BaseImgUrl/images/grocery/grocery_ic_apple.png";
+const grocery_ic_bg_drinks = "$BaseImgUrl/images/grocery/grocery_ic_bg_drinks.jpg";
+const grocery_ic_carts = "$BaseImgUrl/images/grocery/grocery_ic_carts.png";
+const grocery_logo = "$BaseImgUrl/images/grocery/grocery_logo.png";
+const grocery_ic_logo = "images/grocery/grocery_ic_logo.png";
+const grocery_ic_carrot = "$BaseImgUrl/images/grocery/grocery_ic_carrot.png";
+const Grocery_ic_CheckMark = "assets/images/grocery/Grocery_ic_CheckMark.png";
+const Grocery_ic_Dollar = "assets/images/grocery/Grocery_ic_Dollar.png";
+const Grocery_ic_Lock = "assets/images/grocery/Grocery_ic_Lock.png";
+const Grocery_ic_DeliveryTruck = "assets/images/grocery/Grocery_ic_DeliveryTruck.png";
+const Grocery_ic_User = "assets/images/grocery/Grocery_ic_User.png";
+const Grocery_ic_Logout = "assets/images/grocery/Grocery_ic_Logout.png";
+const Grocery_ic_Home = "assets/images/grocery/Grocery_ic_Home.png";
+const Grocery_ic_bag = "assets/images/grocery/Grocery_ic_bag.png";
+const Grocery_ic_Android = "assets/images/grocery/Grocery_ic_Android.jpg";
+
+const grocery_ic_visa = "assets/images/grocery/visa.jpeg";
+const grocery_ic_masterCard = "assets/images/grocery/masterCard.jpeg";
+
+const grocery_ic_shop = "assets/images/grocery/grocery_ic_shop.png";
+const grocery_ic_outline_favourite = "assets/images/grocery/grocery_ic_outline_favourite.png";
+const grocery_ic_grocery = "assets/images/grocery/grocery_ic_grocery.png";
+const grocery_ic_liquor = "assets/images/grocery/grocery_ic_liquor.png";
+const grocery_ic_chilled = "assets/images/grocery/grocery_ic_chilled.png";
+const grocery_ic_pharmacy = "assets/images/grocery/grocery_ic_pharmacy.png";
+const grocery_ic_frozen = "assets/images/grocery/grocery_ic_frozen.png";
+const grocery_ic_vegetables = "assets/images/grocery/grocery_ic_vegetables.png";
+const grocery_ic_meat = "assets/images/grocery/grocery_ic_meat.png";
+const grocery_ic_fish = "assets/images/grocery/grocery_ic_fish.png";
+const grocery_ic_homeware = "assets/images/grocery/grocery_ic_homeware.png";
+const grocery_ic_fruit = "assets/images/grocery/grocery_ic_fruit.png";
