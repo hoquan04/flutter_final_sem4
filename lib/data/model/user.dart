@@ -5,7 +5,7 @@ class User {
   final String fullName;
   final String email;
   final String? phone;
-  final String passwordHash;
+  final String? passwordHash;
   final String? address;
   final UserRole role;
   final DateTime createdAt;
@@ -17,20 +17,22 @@ class User {
     this.phone,
     required this.passwordHash,
     this.address,
-    required this.role,
+    this.role = UserRole.Customer, // ✅ mặc định là Customer
     required this.createdAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    userId: json['userId'],
-    fullName: json['fullName'],
-    email: json['email'],
-    phone: json['phone'],
-    passwordHash: json['passwordHash'],
-    address: json['address'],
+    userId: json['userId'] ?? 0,
+    fullName: json['fullName'] ?? '',
+    email: json['email'] ?? '',
+    phone: json['phone'], // có thể null
+    passwordHash: json['passwordHash'], // có thể null
+    address: json['address'], // có thể null
     role: UserRole.values.firstWhere(
-            (e) => e.toString().split('.').last == json['role']),
-    createdAt: DateTime.parse(json['createdAt']),
+          (e) => e.toString().split('.').last == (json['role'] ?? 'Customer'),
+      orElse: () => UserRole.Customer,
+    ),
+    createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
