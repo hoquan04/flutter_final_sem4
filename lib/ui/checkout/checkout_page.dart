@@ -1,99 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_sem4/data/model/payment.dart';
-import 'package:flutter_final_sem4/data/service/PaymentService.dart';
+import 'package:flutter_final_sem4/ui/checkout/MapPickerPage.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 
-class PaymentPage extends StatefulWidget {
-  const PaymentPage({super.key});
+
+class CheckoutPage extends StatefulWidget {
+  const CheckoutPage({super.key});
 
   @override
-  State<PaymentPage> createState() => _PaymentPageState();
+  State<CheckoutPage> createState() => _CheckoutPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage> {
-  final PaymentService _paymentService = PaymentService();
-  final TextEditingController _orderIdController = TextEditingController();
+class _CheckoutPageState extends State<CheckoutPage> {
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+
   String _selectedMethod = "Cash"; // mặc định
-  List<Payment> _payments = [];
-  bool _loading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPayments();
-  }
+  // Lưu tọa độ khi chọn trên map
+  LatLng? _selectedLocation;
 
-  Future<void> _loadPayments() async {
-    setState(() => _loading = true);
-    try {
-      final data = await _paymentService.getAllPayments();
+  // Mở màn hình chọn map
+  Future<void> _openMapPicker() async {
+    final LatLng? result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MapPickerPage(),
+      ),
+    );
+    if (result != null) {
       setState(() {
-        _payments = data;
+        _selectedLocation = result;
+        _addressCtrl.text =
+        "Lat: ${result.latitude}, Lng: ${result.longitude}"; // demo, sau có thể reverse geocoding
       });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi tải payments: $e")),
-      );
     }
-    setState(() => _loading = false);
   }
 
-  Future<void> _createPayment() async {
-    if (_orderIdController.text.isEmpty) {
+  void _submitOrder() {
+    if (_nameCtrl.text.isEmpty || _phoneCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập OrderId")),
+        const SnackBar(content: Text("Vui lòng nhập đầy đủ thông tin")),
       );
       return;
     }
 
-    final orderId = int.tryParse(_orderIdController.text);
-    if (orderId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OrderId phải là số")),
-      );
-      return;
-    }
-
-    setState(() => _loading = true);
-    try {
-      final newPayment = await _paymentService.createPayment(orderId, _selectedMethod);
-      setState(() {
-        _payments.insert(0, newPayment);
-        _orderIdController.clear();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tạo payment thành công")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi tạo payment: $e")),
-      );
-    }
-    setState(() => _loading = false);
+    // TODO: Gửi API place-order
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Đặt hàng thành công cho ${_nameCtrl.text}")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Payment Page"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(title: const Text("Checkout")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Nhập OrderId
             TextField(
-              controller: _orderIdController,
-              keyboardType: TextInputType.number,
+              controller: _nameCtrl,
               decoration: const InputDecoration(
-                labelText: "Order ID",
+                labelText: "Họ và tên",
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Chọn phương thức
+            TextField(
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: "Số điện thoại",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: _emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: "Email (không bắt buộc)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: _addressCtrl,
+              decoration: InputDecoration(
+                labelText: "Địa chỉ giao hàng",
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.map),
+                  onPressed: _openMapPicker,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
             DropdownButtonFormField<String>(
               value: _selectedMethod,
               items: ["Cash", "CreditCard", "Paypal"].map((method) {
@@ -103,53 +112,22 @@ class _PaymentPageState extends State<PaymentPage> {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedMethod = value;
-                  });
-                }
+                if (value != null) setState(() => _selectedMethod = value);
               },
               decoration: const InputDecoration(
                 labelText: "Phương thức thanh toán",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Nút tạo payment
-            ElevatedButton.icon(
-              onPressed: _loading ? null : _createPayment,
-              icon: const Icon(Icons.payment),
-              label: const Text("Tạo Payment"),
-            ),
             const SizedBox(height: 20),
 
-            // Hiển thị danh sách payment
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _payments.isEmpty
-                  ? const Center(child: Text("Chưa có payment nào"))
-                  : ListView.builder(
-                itemCount: _payments.length,
-                itemBuilder: (context, index) {
-                  final p = _payments[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.receipt_long),
-                      title: Text("Order #${p.orderId} - ${p.paymentMethod}"),
-                      subtitle: Text(
-                        "Trạng thái: ${p.paymentStatus}\nNgày: ${p.createdAt}",
-                      ),
-                      trailing: p.paidAt != null
-                          ? const Icon(Icons.check_circle, color: Colors.green)
-                          : const Icon(Icons.hourglass_empty, color: Colors.orange),
-                    ),
-                  );
-                },
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitOrder,
+                child: const Text("Đặt hàng"),
               ),
-            )
+            ),
           ],
         ),
       ),

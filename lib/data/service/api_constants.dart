@@ -9,11 +9,14 @@ class ApiConstants {
   static String baseUrl = "http://$domain/api";
 
   // Đường dẫn ảnh
-  // static String sourceImage = "https://localhost:58206/";
+  static String sourceImage = "http://$domain/";
 
   // API endpoints
   static String productUrl = "$baseUrl/product";
   static String categoryUrl = "$baseUrl/category";
   static String orderUrl = "$baseUrl/order";
   static String brandUrl = "$baseUrl/brand";
+  static String paymentUrl = "$baseUrl/checkout";
+  static String cartUrl = "$baseUrl/cart";
+
 }
