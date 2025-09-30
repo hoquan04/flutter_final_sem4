@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class GroceryTrackOrderScreen extends StatefulWidget {
   static String tag = '/GroceryTrackOrderScreen';
 
+  const GroceryTrackOrderScreen({super.key});
+
   @override
   _GroceryTrackOrderScreenState createState() => _GroceryTrackOrderScreenState();
 }

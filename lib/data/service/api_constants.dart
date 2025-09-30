@@ -16,4 +16,6 @@ class ApiConstants {
   static String categoryUrl = "$baseUrl/category";
   static String orderUrl = "$baseUrl/order";
   static String brandUrl = "$baseUrl/brand";
+  static String reviewUrl = "$baseUrl/review";
+  static String authUrl = "$baseUrl/auth"; // thêm cho rõ ràng
 }

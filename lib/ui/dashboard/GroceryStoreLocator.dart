@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/utils/GroceryColors.dart';
 // import 'package:grocery_flutter/screen/PurchaseMoreScreen.dart';
@@ -10,6 +9,8 @@ import 'package:flutter_final_sem4/utils/GroceryColors.dart';
 
 class GroceryStoreLocatorScreen extends StatefulWidget {
   static String tag = '/GroceryStoreLocatorScreen';
+
+  const GroceryStoreLocatorScreen({super.key});
 
   @override
   _GroceryStoreLocatorScreenState createState() => _GroceryStoreLocatorScreenState();

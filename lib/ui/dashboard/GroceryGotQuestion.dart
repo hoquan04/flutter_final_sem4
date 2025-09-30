@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 class GroceryGotQuestionScreen extends StatefulWidget {
   static String tag = '/GroceryGotQuestionScreen';
 
+  const GroceryGotQuestionScreen({super.key});
+
   @override
   _GroceryGotQuestionScreenState createState() => _GroceryGotQuestionScreenState();
 }
