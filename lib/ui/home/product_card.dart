@@ -15,7 +15,7 @@ class ProductCard extends StatelessWidget {
     if (imageUrl.isNotEmpty && !imageUrl.startsWith("http")) {
       imageUrl = "http://${ApiConstants.domain}" + imageUrl;
     }
-    
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -29,6 +29,7 @@ class ProductCard extends StatelessWidget {
             ),
           );
         },
+
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -53,6 +54,7 @@ class ProductCard extends StatelessWidget {
                               ),
                             );
                           },
+
                         )
                       : Container(
                           color: Colors.grey[200],
@@ -76,7 +78,9 @@ class ProductCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
+
                 "${product.price.toStringAsFixed(0)}đ",
+
                 style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.w600,
@@ -87,6 +91,7 @@ class ProductCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+
                   GestureDetector(
                     onTap: () {
                       // TODO: Add to favorites
@@ -127,3 +132,4 @@ class ProductCard extends StatelessWidget {
     );
   }
 }
+
