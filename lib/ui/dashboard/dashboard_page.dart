@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/data/model/GroceryModel.dart';
 import 'package:flutter_final_sem4/ui/cart/cart_page.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryGotQuestion.dart';
-import 'package:flutter_final_sem4/ui/dashboard/GroceryOrderHistory.dart';
+import 'package:flutter_final_sem4/ui/dashboard/order_history_page.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GrocerySaveCart.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryStoreLocator.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryTermCondition.dart';
@@ -48,7 +48,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
   ];
 
   var listClick = [
-    GroceryOrderHistoryScreen(),
+    OrderHistoryPage(),
     GroceryTrackOrderScreen(),
     GrocerySaveCart(),
     GroceryStoreLocatorScreen(),
@@ -130,7 +130,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
                         }),
                         SizedBox(width: spacing_large),
                         text(
-                          "Shopp nhóm 1",
+                          "Cửa hàng nhóm 1",
                           textColor: grocery_Color_black,
                           fontFamily: fontBold,
                           fontSize: textSizeLargeMedium,

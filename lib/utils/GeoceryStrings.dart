@@ -48,7 +48,7 @@ const grocery_lbl_Save = "SAVE";
 const grocery_lbl_old_Password = "Old Password";
 const grocery_lbl_new_Password = "New Password";
 const grocery_lbl_confirm_Password = "Confirm Password";
-const grocery_lbl_Terms_and_Condition = "Terms & Condtions";
+const grocery_lbl_Terms_and_Condition = "Điều khoản và điều kiện";
 const grocery_lbl_Long_text = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit, seddiam nonummy nibh euismod tincidunt ut laoreet dolore magna. Lorem ipsum dolor sit amet,"
     "consectetuer adipiscing elit, seddiam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.Ut wisi enim ad minimveniam, quis nostrd exerci  tations.";
 const grocery_lbl_Select_Delivery_Type = "Select Delivery Type";
@@ -60,7 +60,7 @@ const grocery_lbl_checkout = "Checkout";
 const grocery_lbl_subtotal = "Subtotal (4 items)";
 const grocery_lbl_promotion_discount = "Promotion discount";
 const grocery_lbl_promotion_discount_price = "Rs -220.00";
-const grocery_lbl_save_cart = "Save cart";
+const grocery_lbl_save_cart = "Giỏ hàng";
 const grocery_lbl_save_shopping_cart = "Save shopping cart";
 const grocery_msg_save_shopping_cart = "When you're ready,you can check out";
 const grocery_lbl_remove_an_item = "Remove an Item";
@@ -100,7 +100,7 @@ const grocery_lbl_pickup_info = "Pick up 12 April/9:30 AM";
 const grocery_lbl_payment_info = "**** **** **** 5265";
 
 //Order History
-const grocery_orderHistory = "Order History";
+const grocery_orderHistory = "Lịch sử đơn hàng";
 const grocery_completed = "COMPLETED";
 const grocery_upComming = "UP COMMING";
 const grocery_cancelled = "CANCELED";
@@ -109,10 +109,10 @@ const grocery_subtotal = "Subtotal";
 const grocery_totalItems = "Total items";
 
 //Track Orders
-const grocery_trackOrders = "Track orders";
+const grocery_trackOrders = "theo dõi đơn hàng";
 
 //Store locator
-const grocery_storeLocator = "Store locator";
+const grocery_storeLocator = "Cửa hàng";
 const grocery_allStores = "ALL STORES";
 const grocery_nearby = "NEARBY";
 const grocery_direction = "DIRECTION";
@@ -137,7 +137,7 @@ const grocery_save = "SAVE";
 
 //Question
 const grocery_question = "Question";
-const grocery_gotQuestion = "Got a Question?";
+const grocery_gotQuestion = "Câu hỏi?";
 const grocery_yourQuestion = "Your Question";
 const grocery_questionAnswer = "Ask question and get your answer";
 const grocery_typeQuestion = "Type your question";

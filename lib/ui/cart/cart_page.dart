@@ -202,15 +202,29 @@ class _CartPageState extends State<CartPage> {
                                           icon: Icons.remove,
                                           onTap: () => _decreaseQuantity(item),
                                         ),
-                                        Container(
-                                          width: 35,
+                                        SizedBox(
+                                          width: 40,
                                           height: 28,
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.grey.shade400),
+                                          child: TextFormField(
+                                            initialValue: item.quantity.toString(), // ✅ không reset controller
+                                            textAlign: TextAlign.center,
+                                            keyboardType: TextInputType.number,
+                                            decoration: const InputDecoration(
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            onFieldSubmitted: (value) async {
+                                              final newQuantity = int.tryParse(value) ?? item.quantity;
+                                              if (newQuantity > 0 && newQuantity != item.quantity) {
+                                                await _repo.updateQuantity(item.cartId, newQuantity);
+                                                _loadCart();
+                                              }
+                                            },
                                           ),
-                                          child: Text("${item.quantity}"),
                                         ),
+
+
                                         _quantityButton(
                                           icon: Icons.add,
                                           onTap: () => _increaseQuantity(item),
