@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_sem4/data/model/CartDto.dart';
+import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
+import 'package:flutter_final_sem4/data/service/api_constants.dart';
+import 'package:flutter_final_sem4/ui/checkout/checkout_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CartPage extends StatefulWidget {
+  static String tag = '/CartPage';
+
   const CartPage({super.key});
 
   @override
@@ -8,97 +15,338 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  // Giả lập dữ liệu giỏ hàng
-  List<Map<String, dynamic>> cartItems = [
-    {"name": "Táo Mỹ", "price": 30000, "quantity": 2, "image": "assets/images/grocery/grocery_ic_fruit.png"},
-    {"name": "Cà rốt", "price": 15000, "quantity": 1, "image": "assets/images/grocery/grocery_ic_vegetables.png"},
-    {"name": "Thịt bò", "price": 120000, "quantity": 1, "image": "assets/images/grocery/grocery_ic_meat.png"},
-  ];
+  final CartRepository _repo = CartRepository();
+  late Future<List<CartDto>> _cartFuture;
+  Set<int> _selectedItems = {};
+  int? userId;
+  bool _isEditMode = false; // ✅ trạng thái sửa
 
-  // Hàm tính tổng tiền
-  int getTotalAmount() {
-    int total = 0;
-    // for (var item in cartItems) {
-    //   total += item["price"] * item["quantity"];
-    // }
-    return total;
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndCart();
+  }
+
+  Future<void> _loadUserAndCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getInt("userId");
+    });
+    if (userId != null) {
+      setState(() {
+        _cartFuture = _repo.getCartByUser(userId!);
+      });
+    }
+  }
+
+  void _loadCart() {
+    if (userId != null) {
+      setState(() {
+        _cartFuture = _repo.getCartByUser(userId!);
+      });
+    }
+  }
+
+  Future<void> _increaseQuantity(CartDto item) async {
+    await _repo.updateQuantity(item.cartId, item.quantity + 1);
+    _loadCart();
+  }
+
+  Future<void> _decreaseQuantity(CartDto item) async {
+    if (item.quantity > 1) {
+      await _repo.updateQuantity(item.cartId, item.quantity - 1);
+      _loadCart();
+    }
+  }
+
+  Future<void> _removeSelectedItems() async {
+    if (_selectedItems.isEmpty) return;
+    await _repo.removeItems(_selectedItems.toList());
+    setState(() => _selectedItems.clear());
+    _loadCart();
+  }
+
+  Future<double> _getTotalPrice(List<CartDto> items) async {
+    return items
+        .where((item) => _selectedItems.contains(item.cartId))
+        .fold<double>(0.0, (sum, item) => sum + (item.price * item.quantity));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text("My Cart"),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: FutureBuilder<List<CartDto>>(
+          future: _cartFuture,
+          builder: (context, snapshot) {
+            int count = snapshot.hasData ? snapshot.data!.length : 0;
+            return Row(
+              children: [
+                const Icon(Icons.shopping_cart, color: Color(0xFF00c97b)),
+                const SizedBox(width: 8),
+                Text("Giỏ hàng ($count)", style: const TextStyle(color: Colors.black)),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _isEditMode = !_isEditMode;
+              });
+            },
+            child: Text(
+              _isEditMode ? "Xong" : "Sửa",
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+            ),
+          )
+        ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                var item = cartItems[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: ListTile(
-                    leading: Image.asset(item["image"], width: 40, height: 40),
-                    title: Text(item["name"]),
-                    subtitle: Text("Giá: ${item["price"]} đ"),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+
+      body: FutureBuilder<List<CartDto>>(
+        future: _cartFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final cartItems = snapshot.data!;
+          if (cartItems.isEmpty) return const Center(child: Text("Giỏ hàng trống"));
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: cartItems.length,
+                  itemBuilder: (context, index) {
+                    final item = cartItems[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: _selectedItems.contains(item.cartId),
+                            onChanged: (checked) {
+                              setState(() {
+                                if (checked == true) {
+                                  _selectedItems.add(item.cartId);
+                                } else {
+                                  _selectedItems.remove(item.cartId);
+                                }
+                              });
+                            },
+                          ),
+                          SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: Image.network(
+                              ApiConstants.sourceImage + (item.imageUrl ?? ""),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.image, size: 50),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // ✅ Tên sản phẩm
+                                Text(
+                                  item.productName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(height: 6),
+
+                                // ✅ Giá + nút tăng giảm nằm cùng 1 hàng
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // giá gốc (1 sản phẩm)
+                                        Text(
+                                          "${item.price}đ",
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // thành tiền = giá * số lượng
+                                        Text(
+                                          "Thành tiền: ${(item.price * item.quantity).toStringAsFixed(0)}đ",
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // cụm tăng giảm
+                                    Row(
+                                      children: [
+                                        _quantityButton(
+                                          icon: Icons.remove,
+                                          onTap: () => _decreaseQuantity(item),
+                                        ),
+                                        Container(
+                                          width: 35,
+                                          height: 28,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.grey.shade400),
+                                          ),
+                                          child: Text("${item.quantity}"),
+                                        ),
+                                        _quantityButton(
+                                          icon: Icons.add,
+                                          onTap: () => _increaseQuantity(item),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                              ],
+                            ),
+                          ),
+
+
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ✅ Footer: chế độ Đặt hàng hoặc Xóa
+              // ✅ Footer: chế độ Đặt hàng hoặc Xóa
+              FutureBuilder<double>(
+                future: _getTotalPrice(cartItems),
+                builder: (context, snapshot) {
+                  final totalPrice = snapshot.data ?? 0;
+                  bool isAllSelected =
+                      _selectedItems.length == cartItems.length && cartItems.isNotEmpty;
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                    ),
+                    child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: () {
+                        // Checkbox chọn tất cả
+                        Checkbox(
+                          value: isAllSelected,
+                          onChanged: (checked) {
                             setState(() {
-                              if (item["quantity"] > 1) {
-                                item["quantity"]--;
+                              if (checked == true) {
+                                _selectedItems = cartItems.map((e) => e.cartId).toSet();
+                              } else {
+                                _selectedItems.clear();
                               }
                             });
                           },
                         ),
-                        Text("${item["quantity"]}"),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () {
-                            setState(() {
-                              item["quantity"]++;
-                            });
-                          },
+                        const Text("Tất cả"),
+
+                        const Spacer(),
+
+                        // ✅ Tổng tiền + Nút hành động nằm cùng 1 cụm bên phải
+                        Row(
+                          children: [
+                            if (!_isEditMode)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Text(
+                                  "Tổng: ${totalPrice.toStringAsFixed(0)}đ",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
+
+                            // Nút hành động
+                            if (_isEditMode)
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                onPressed: _removeSelectedItems,
+                                child: const Text("Xóa"),
+                              )
+                            else
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF00c97b),
+                                ),
+                                onPressed: () {
+                                  final selected = cartItems
+                                      .where((item) => _selectedItems.contains(item.cartId))
+                                      .toList();
+                                  if (selected.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("⚠️ Vui lòng chọn sản phẩm")),
+                                    );
+                                    return;
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CheckoutPage(selectedItems: selected),
+                                    ),
+                                  ).then((value) {
+                                    if (value == true) {
+                                      _loadCart(); // ✅ Làm mới giỏ hàng sau khi đặt hàng
+                                    }
+                                  });
+
+                                },
+                                child: Text("Mua hàng (${_selectedItems.length})"),
+                              ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-          // Tổng tiền + nút thanh toán
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Tổng: ${getTotalAmount()} đ",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // TODO: xử lý thanh toán
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text("Thanh toán"),
-                ),
-              ],
-            ),
-          ),
-        ],
+                  );
+
+                },
+              ),
+
+
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+
+Widget _quantityButton({required IconData icon, required VoidCallback onTap}) {
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+      ),
+      child: Icon(icon, size: 16, color: Colors.black87),
+    ),
+  );
 }

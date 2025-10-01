@@ -153,7 +153,7 @@ class _TestProductPageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              FutureBuilder<List<Product>>(
+                FutureBuilder<List<Product>>(
                 future: _selectedCategoryId == null
                     ? _futureProducts
                     : _futureProductsByCategory,

@@ -33,6 +33,7 @@ class AuthRepository {
           await prefs.setString("fullName", userJson['fullName'] ?? '');
           await prefs.setString("email", userJson['email'] ?? '');
 
+
           await prefs.setInt("userId", userJson['userId'] ?? 0); // ← THÊM DÒNG NÀY
 
 

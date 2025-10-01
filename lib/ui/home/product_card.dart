@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/data/model/product.dart';
+import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
 import 'package:flutter_final_sem4/data/service/api_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_final_sem4/ui/product_detail/product_detail.dart';
 
@@ -92,37 +94,35 @@ class ProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
 
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Add to favorites
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã thêm vào yêu thích'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    child: const Icon(
-                      Icons.favorite_border, 
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Add to cart
+                  const Icon(Icons.favorite_border, color: Colors.redAccent),
+                  SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, color: Colors.blue),
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final userId = prefs.getInt("userId");
+
+                      if (userId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("⚠️ Vui lòng đăng nhập trước")),
+                        );
+                        return;
+                      }
+
+                      final repo = CartRepository();
+                      final success = await repo.addToCart(userId, product.productId, 1);
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Đã thêm ${product.name} vào giỏ hàng'),
-                          duration: const Duration(seconds: 1),
+                          content: Text(success
+                              ? "✅ Đã thêm ${product.name} vào giỏ hàng"
+                              : "❌ Thêm giỏ hàng thất bại"),
                         ),
                       );
                     },
-                    child: const Icon(
-                      Icons.shopping_cart_outlined, 
-                      color: Colors.blue,
-                    ),
                   ),
+
+
                 ],
               ),
             ],
