@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 class GroceryTermCondition extends StatefulWidget {
   static String tag = '/GroceryTermCondition';
 
+  const GroceryTermCondition({super.key});
+
   @override
   _GroceryTermConditionState createState() => _GroceryTermConditionState();
 }

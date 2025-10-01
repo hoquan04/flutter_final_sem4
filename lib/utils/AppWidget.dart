@@ -73,7 +73,7 @@ Widget commonCacheImageWidget(String? url, {double? height, double? width, BoxFi
 class CustomTheme extends StatelessWidget {
   final Widget? child;
 
-  CustomTheme({required this.child});
+  const CustomTheme({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

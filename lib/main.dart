@@ -1,26 +1,3 @@
-/*
-import 'package:flutter/material.dart';
-import 'package:flutter_final_sem4/ui/dashboard/dashboard_page.dart';
-import 'package:flutter_final_sem4/ui/home/home_page.dart';
-
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home:  GroceryDashBoardScreen(),
-    );
-  }
-}
-*/
-
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/ui/auth/login_page.dart';
 import 'package:flutter_final_sem4/ui/auth/register_page.dart';

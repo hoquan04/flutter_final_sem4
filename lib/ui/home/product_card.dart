@@ -4,6 +4,8 @@ import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
 import 'package:flutter_final_sem4/data/service/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_final_sem4/ui/product_detail/product_detail.dart';
+
 class ProductCard extends StatelessWidget {
   final Product product;
   const ProductCard({Key? key, required this.product}) : super(key: key);
@@ -15,11 +17,21 @@ class ProductCard extends StatelessWidget {
     if (imageUrl.isNotEmpty && !imageUrl.startsWith("http")) {
       imageUrl = "http://${ApiConstants.domain}" + imageUrl;
     }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          // Navigate to product detail page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailPage(product: product),
+            ),
+          );
+        },
+
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -34,6 +46,17 @@ class ProductCard extends StatelessWidget {
                           imageUrl,
                           fit: BoxFit.cover,
                           width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.image,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+
                         )
                       : Container(
                           color: Colors.grey[200],
@@ -57,7 +80,9 @@ class ProductCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                "${product.price} đ",
+
+                "${product.price.toStringAsFixed(0)}đ",
+
                 style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.w600,
@@ -68,6 +93,7 @@ class ProductCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+
                   const Icon(Icons.favorite_border, color: Colors.redAccent),
                   SizedBox(width: 12),
                   IconButton(
@@ -96,6 +122,7 @@ class ProductCard extends StatelessWidget {
                     },
                   ),
 
+
                 ],
               ),
             ],
@@ -105,3 +132,4 @@ class ProductCard extends StatelessWidget {
     );
   }
 }
+

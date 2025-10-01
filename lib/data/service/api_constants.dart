@@ -16,8 +16,14 @@ class ApiConstants {
   static String categoryUrl = "$baseUrl/category";
   static String orderUrl = "$baseUrl/order";
   static String brandUrl = "$baseUrl/brand";
+
   static String authUrl = "$baseUrl/auth";
   static String paymentUrl = "$baseUrl/payment";
   static String cartUrl = "$baseUrl/cart";
   static String checkoutUrl = "$baseUrl/checkout";
+
+  static String reviewUrl = "$baseUrl/review";
+
 }
+
+
