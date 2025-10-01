@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'edit_profile_page.dart';
+import 'change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -75,13 +77,15 @@ class _ProfilePageState extends State<ProfilePage> {
             // Avatar
             const CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage("assets/images/grocery/Grocery_ic_User.png"),
+              backgroundImage:
+              AssetImage("assets/images/grocery/Grocery_ic_User.png"),
             ),
 
             const SizedBox(height: 10),
             Text(
               fullName,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style:
+              const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(
               email,
@@ -91,6 +95,36 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 20),
 
             // Danh sách tuỳ chọn
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text("Edit Profile"),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UpdateProfilePage()),
+                );
+                if (result == true) {
+                  _loadUserInfo(); // Reload lại tên sau khi cập nhật
+                }
+              },
+            ),
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.lock),
+              title: const Text("Change Password"),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ChangePasswordPage()),
+                );
+              },
+            ),
+            const Divider(),
+
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text("Order History"),
@@ -123,8 +157,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout", style: TextStyle(color: Colors.red)),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red),
+              title: const Text("Logout",
+                  style: TextStyle(color: Colors.red)),
+              trailing: const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.red),
               onTap: _confirmLogout,
             ),
           ],
