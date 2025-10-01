@@ -33,6 +33,9 @@ class AuthRepository {
           await prefs.setString("fullName", userJson['fullName'] ?? '');
           await prefs.setString("email", userJson['email'] ?? '');
 
+          await prefs.setInt("userId", userJson['userId'] ?? 0); // ← THÊM DÒNG NÀY
+
+
           return User.fromJson(userJson);
         } else {
           // Login thất bại (API trả message) hoặc format khác
@@ -47,6 +50,8 @@ class AuthRepository {
       print("AuthRepository.login error: $e");
       return null;
     }
+    
+
   }
 
   /// REGISTER: trả về true nếu thành công, false nếu thất bại
@@ -100,6 +105,9 @@ class AuthRepository {
     await prefs.remove("auth_token");
     await prefs.remove("fullName");
     await prefs.remove("email");
+
+    await prefs.remove("userId"); 
+
     // nếu cần xóa nhiều key thì xóa ở đây
   }
 }

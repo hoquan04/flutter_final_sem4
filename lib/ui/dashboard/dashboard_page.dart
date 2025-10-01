@@ -19,6 +19,8 @@ import 'package:nb_utils/nb_utils.dart';
 class GroceryDashBoardScreen extends StatefulWidget {
   static String tag = '/GroceryDashBoardScreen';
 
+  const GroceryDashBoardScreen({super.key});
+
   @override
   _GroceryDashBoardScreenState createState() => _GroceryDashBoardScreenState();
 }
@@ -67,7 +69,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
     var width = MediaQuery.of(context).size.width;
 
     Widget mMenuOption(var icon, var value, Widget tag) {
-      return Container(
+      return SizedBox(
         height: 70,
         child: GestureDetector(
           onTap: () {
