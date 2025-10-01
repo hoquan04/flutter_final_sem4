@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/data/model/product.dart';
 import 'package:flutter_final_sem4/data/model/review.dart';
+import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
 import 'package:flutter_final_sem4/data/service/api_constants.dart';
 import 'package:flutter_final_sem4/data/service/review_service.dart';
 import 'package:flutter_final_sem4/ui/review/reviewPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
-  
+
   const ProductDetailPage({
-    super.key, 
+    super.key,
     required this.product,
   });
 
@@ -19,8 +21,9 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int quantity = 1;
+  late TextEditingController _quantityController;
   bool isFavorite = false;
-  
+  final CartRepository _cartRepo = CartRepository();
   // Dữ liệu đánh giá từ API
   double rating = 0.0;
   int totalReviews = 0;
@@ -30,17 +33,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   void initState() {
     super.initState();
+    _quantityController = TextEditingController(text: quantity.toString());
     _loadReviewData();
+  }
+  @override
+  void dispose() {
+    _quantityController.dispose(); // ✅ nhớ dispose
+    super.dispose();
   }
 
   Future<void> _loadReviewData() async {
     try {
       // Lấy điểm trung bình
       final avgRating = await ReviewService.getAverageRating(widget.product.productId);
-      
+
       // Lấy tất cả reviews của sản phẩm
       final allReviews = await ReviewService.getReviewsByProductId(widget.product.productId);
-      
+
       setState(() {
         rating = avgRating;
         totalReviews = allReviews.length;
@@ -60,6 +69,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (quantity < widget.product.stockQuantity) {
       setState(() {
         quantity++;
+        _quantityController.text = quantity.toString();
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,6 +85,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (quantity > 1) {
       setState(() {
         quantity--;
+        _quantityController.text = quantity.toString();
       });
     }
   }
@@ -86,8 +97,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isFavorite 
-            ? 'Đã thêm vào yêu thích' 
+          isFavorite
+            ? 'Đã thêm vào yêu thích'
             : 'Đã xóa khỏi yêu thích'
         ),
         backgroundColor: Colors.green,
@@ -103,22 +114,41 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       builder: (context) => ReviewPage(productId: widget.product.productId),
     ),
   );
-  
+
   // Reload dữ liệu đánh giá nếu có thay đổi
   if (result == true) {
     _loadReviewData();
   }
 }
 
-  void addToCart() {
-    // TODO: Implement add to cart logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã thêm $quantity sản phẩm vào giỏ hàng'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  Future<void> addToCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt("userId");
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ Bạn cần đăng nhập để thêm giỏ hàng")),
+      );
+      return;
+    }
+
+    final success = await _cartRepo.addToCart(userId, widget.product.productId, quantity);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Đã thêm $quantity sản phẩm vào giỏ hàng'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Thêm vào giỏ hàng thất bại'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   String _getImageUrl() {
@@ -132,8 +162,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   Widget build(BuildContext context) {
     final imageUrl = _getImageUrl();
-    
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
+      extendBody: true,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
@@ -272,7 +304,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          
+
                           // Nút đánh giá - Có thể click để xem trang review
                           if (isLoadingReviews)
                             Container(
@@ -312,7 +344,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      totalReviews > 0 
+                                      totalReviews > 0
                                           ? rating.toStringAsFixed(1)
                                           : '0.0',
                                       style: const TextStyle(
@@ -340,9 +372,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ),
                               ),
                             ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Giá sản phẩm
                           Row(
                             children: [
@@ -356,9 +388,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Số lượng còn lại
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -366,8 +398,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: widget.product.stockQuantity > 10 
-                                  ? Colors.green.shade50 
+                              color: widget.product.stockQuantity > 10
+                                  ? Colors.green.shade50
                                   : Colors.orange.shade50,
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -377,8 +409,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 Icon(
                                   Icons.inventory_2_outlined,
                                   size: 18,
-                                  color: widget.product.stockQuantity > 10 
-                                      ? Colors.green.shade700 
+                                  color: widget.product.stockQuantity > 10
+                                      ? Colors.green.shade700
                                       : Colors.orange.shade700,
                                 ),
                                 const SizedBox(width: 8),
@@ -387,17 +419,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: widget.product.stockQuantity > 10 
-                                        ? Colors.green.shade700 
+                                    color: widget.product.stockQuantity > 10
+                                        ? Colors.green.shade700
                                         : Colors.orange.shade700,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Mô tả sản phẩm
                           const Text(
                             'Mô tả sản phẩm',
@@ -408,7 +440,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.product.description ?? 
+                            widget.product.description ??
                             'Sản phẩm chất lượng cao, được trồng theo phương pháp hữu cơ.',
                             style: TextStyle(
                               fontSize: 14,
@@ -417,7 +449,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Phần đánh giá nhanh (preview)
                           if (isLoadingReviews)
                             Container(
@@ -541,91 +573,116 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+      bottomNavigationBar: AnimatedPadding(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom, // ← khi bàn phím bật
         ),
-        child: Row(
-          children: [
-            // Nút điều chỉnh số lượng
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove),
-                    onPressed: decrementQuantity,
-                    color: Colors.grey.shade700,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      quantity.toString(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: incrementQuantity,
-                    color: Colors.green.shade700,
-                  ),
-                ],
-              ),
+        child: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-
-            // Nút thêm vào giỏ hàng
-            Expanded(
-              child: ElevatedButton(
-                onPressed: widget.product.stockQuantity > 0 
-                    ? addToCart 
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
+            child: Row(
+              children: [
+                // cụm tăng giảm số lượng
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // nút giảm
+                      SizedBox(
+                        width: 40,
+                        height: 40, // ✅ đồng bộ chiều cao
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.remove, size: 20),
+                          onPressed: decrementQuantity,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+
+                      // ô số lượng
+                      SizedBox(
+                        width: 50,
+                        height: 40, // ✅ cao bằng nút
+                        child: Center(
+                          child: TextField(
+                            controller: _quantityController,
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(fontSize: 16),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onSubmitted: (value) {
+                              final newQuantity = int.tryParse(value) ?? quantity;
+                              if (newQuantity > 0 && newQuantity <= widget.product.stockQuantity) {
+                                setState(() => quantity = newQuantity);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Số lượng phải từ 1 đến ${widget.product.stockQuantity}")),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // nút tăng
+                      SizedBox(
+                        width: 40,
+                        height: 40, // ✅ đồng bộ chiều cao
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.add, size: 20),
+                          onPressed: incrementQuantity,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.product.stockQuantity > 0
-                          ? 'Thêm vào giỏ - ${(widget.product.price * quantity).toStringAsFixed(0)}đ'
-                          : 'Hết hàng',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+
+                const SizedBox(width: 16),
+
+                // nút thêm giỏ hàng
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: widget.product.stockQuantity > 0 ? addToCart : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade600,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                    child: Text(
+                      widget.product.stockQuantity > 0
+                          ? "Thêm vào giỏ - ${(widget.product.price * quantity).toStringAsFixed(0)}đ"
+                          : "Hết hàng",
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                )
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -633,7 +690,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget _buildReviewPreview(Review review) {
     String timeAgo = _formatTimeAgo(review.createdAt);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
