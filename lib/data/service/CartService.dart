@@ -30,10 +30,20 @@ class CartService {
     return res.statusCode == 200;
   }
 
-  Future<bool> removeItem(int cartId) async {
-    final res = await http.delete(Uri.parse("$baseUrl/remove/$cartId"));
-    return res.statusCode == 200;
+  Future<bool> removeItems(List<int> cartIds) async {
+    final res = await http.delete(
+      Uri.parse("$baseUrl/remove-multi"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(cartIds), // gửi list cartId trong body
+    );
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      return body["success"] == true; // dựa theo APIRespone
+    }
+    return false;
   }
+
 
   Future<bool> clearCart(int userId) async {
     final res = await http.delete(Uri.parse("$baseUrl/clear/$userId"));

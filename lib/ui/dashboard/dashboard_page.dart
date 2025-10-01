@@ -79,10 +79,21 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
               Container(
                 height: 50,
                 width: 50,
-                decoration: boxDecoration(radius: 25.0, bgColor: grocery_colorPrimary_light),
+                decoration: boxDecoration(
+                  radius: 25.0,
+                  bgColor: grocery_colorPrimary_light,
+                ),
                 child: Icon(icon, color: grocery_colorPrimary).paddingAll(12),
-              ).paddingOnly(top: spacing_control, left: spacing_standard, bottom: spacing_control),
-              text(value, fontSize: textSizeLargeMedium, fontFamily: fontMedium).paddingOnly(left: spacing_standard, right: spacing_standard),
+              ).paddingOnly(
+                top: spacing_control,
+                left: spacing_standard,
+                bottom: spacing_control,
+              ),
+              text(
+                value,
+                fontSize: textSizeLargeMedium,
+                fontFamily: fontMedium,
+              ).paddingOnly(left: spacing_standard, right: spacing_standard),
             ],
           ),
         ),
@@ -109,11 +120,19 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
                     color: Colors.white,
                     child: Row(
                       children: <Widget>[
-                        Icon(Icons.clear, color: grocery_light_gray_color).onTap(() {
+                        Icon(
+                          Icons.clear,
+                          color: grocery_light_gray_color,
+                        ).onTap(() {
                           finish(context);
                         }),
                         SizedBox(width: spacing_large),
-                        text("Shopp nhóm 1", textColor: grocery_Color_black, fontFamily: fontBold, fontSize: textSizeLargeMedium)
+                        text(
+                          "Shopp nhóm 1",
+                          textColor: grocery_Color_black,
+                          fontFamily: fontBold,
+                          fontSize: textSizeLargeMedium,
+                        ),
                       ],
                     ).paddingAll(16),
                   ),
@@ -122,13 +141,20 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
                     width: MediaQuery.of(context).size.width,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(20), bottomLeft: Radius.circular(20)),
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(20),
+                      ),
                     ),
                     child: ListView.builder(
                       itemCount: listImage.length,
                       shrinkWrap: true,
                       itemBuilder: (context, index) {
-                        return mMenuOption(listImage[index], listText[index], listClick[index]);
+                        return mMenuOption(
+                          listImage[index],
+                          listText[index],
+                          listClick[index],
+                        );
                       },
                     ),
                   ),
@@ -138,7 +164,10 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
           },
           transitionBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: CurvedAnimation(parent: animation, curve: Curves.easeOut).drive(Tween<Offset>(begin: Offset(0, -1.0), end: Offset.zero)),
+              position: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+              ).drive(Tween<Offset>(begin: Offset(0, -1.0), end: Offset.zero)),
               child: child,
             );
           },
@@ -164,7 +193,12 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
                       children: <Widget>[
                         menu,
                         SizedBox(width: spacing_large),
-                        text("Store", textColor: grocery_color_white, fontFamily: fontBold, fontSize: textSizeLargeMedium),
+                        text(
+                          "Store",
+                          textColor: grocery_color_white,
+                          fontFamily: fontBold,
+                          fontSize: textSizeLargeMedium,
+                        ),
                       ],
                     ),
                     Row(
@@ -185,22 +219,48 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
                           },
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
               bottom: TabBar(
                 indicatorColor: grocery_color_white,
                 tabs: [
-                  Tab(icon: Image.asset(grocery_ic_shop, color: grocery_color_white, height: 20, width: 20)),
+                  Tab(
+                    icon: Image.asset(
+                      grocery_ic_shop,
+                      color: grocery_color_white,
+                      height: 20,
+                      width: 20,
+                    ),
+                  ),
                   Tab(icon: Icon(Icons.shopping_basket)),
-                  Tab(icon: Image.asset(grocery_ic_outline_favourite, color: grocery_color_white, height: 20, width: 20)),
-                  Tab(icon: Image.asset(Grocery_ic_User, color: grocery_color_white, height: 20, width: 20))
+                  Tab(
+                    icon: Image.asset(
+                      grocery_ic_outline_favourite,
+                      color: grocery_color_white,
+                      height: 20,
+                      width: 20,
+                    ),
+                  ),
+                  Tab(
+                    icon: Image.asset(
+                      Grocery_ic_User,
+                      color: grocery_color_white,
+                      height: 20,
+                      width: 20,
+                    ),
+                  ),
                 ],
               ),
             ),
             body: TabBarView(
-              children: <Widget>[HomePage(), CartPage(), HomePage(), ProfilePage()],
+              children: <Widget>[
+                HomePage(),
+                CartPage(),
+                HomePage(),
+                ProfilePage(),
+              ],
             ),
           ),
         ),
