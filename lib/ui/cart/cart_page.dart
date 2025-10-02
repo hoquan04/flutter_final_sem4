@@ -16,7 +16,8 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   final CartRepository _repo = CartRepository();
-  late Future<List<CartDto>> _cartFuture;
+  Future<List<CartDto>> _cartFuture = Future.value([]);
+
   Set<int> _selectedItems = {};
   int? userId;
   bool _isEditMode = false; // ✅ trạng thái sửa
@@ -77,37 +78,46 @@ class _CartPageState extends State<CartPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: FutureBuilder<List<CartDto>>(
-          future: _cartFuture,
-          builder: (context, snapshot) {
-            int count = snapshot.hasData ? snapshot.data!.length : 0;
-            return Row(
-              children: [
-                const Icon(Icons.shopping_cart, color: Color(0xFF00c97b)),
-                const SizedBox(width: 8),
-                Text("Giỏ hàng ($count)", style: const TextStyle(color: Colors.black)),
-              ],
+      backgroundColor: Colors.white,
+      elevation: 0,
+      title: FutureBuilder<List<CartDto>>(
+        future: _cartFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
             );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isEditMode = !_isEditMode;
-              });
-            },
-            child: Text(
-              _isEditMode ? "Xong" : "Sửa",
-              style: const TextStyle(color: Colors.red, fontSize: 16),
-            ),
-          )
-        ],
-      ),
+          }
 
-      body: FutureBuilder<List<CartDto>>(
+          int count = snapshot.hasData ? snapshot.data!.length : 0;
+          return Row(
+            children: [
+              const Icon(Icons.shopping_cart, color: Color(0xFF00c97b)),
+              const SizedBox(width: 8),
+              Text("Giỏ hàng ($count)", style: const TextStyle(color: Colors.black)),
+            ],
+          );
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() {
+              _isEditMode = !_isEditMode;
+            });
+          },
+          child: Text(
+            _isEditMode ? "Xong" : "Sửa",
+            style: const TextStyle(color: Colors.red, fontSize: 16),
+          ),
+        )
+      ],
+    ),
+
+
+    body: FutureBuilder<List<CartDto>>(
         future: _cartFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
