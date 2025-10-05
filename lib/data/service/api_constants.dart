@@ -23,6 +23,7 @@ class ApiConstants {
   static String checkoutUrl = "$baseUrl/checkout";
 
   static String reviewUrl = "$baseUrl/review";
+  static String notificationUrl = "$baseUrl/notification";
 
 }
 

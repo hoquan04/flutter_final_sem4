@@ -47,6 +47,7 @@ dev_dependencies:
     # 📡 Gọi API REST
   http:
     ^1.2.2
+  timeago: ^3.6.1
 
     # 🖼 Load ảnh sản phẩm từ link (nếu cần)
     #cached_network_image: ^3.3.1
