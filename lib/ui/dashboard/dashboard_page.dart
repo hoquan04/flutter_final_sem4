@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/data/model/GroceryModel.dart';
+import 'package:flutter_final_sem4/data/repository/notification_repo.dart';
 import 'package:flutter_final_sem4/ui/cart/cart_page.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryGotQuestion.dart';
+import 'package:flutter_final_sem4/ui/dashboard/GroceryNotification.dart';
+import 'package:flutter_final_sem4/ui/dashboard/grocerySearch.dart';
 import 'package:flutter_final_sem4/ui/dashboard/order_history_page.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GrocerySaveCart.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryStoreLocator.dart';
@@ -26,10 +29,7 @@ class GroceryDashBoardScreen extends StatefulWidget {
   _GroceryDashBoardScreenState createState() => _GroceryDashBoardScreenState();
 }
 
-class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
-  // late List<ProductModel> mFavouriteList;
-  // late List<ProductModel> mCartList;
-
+class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> with WidgetsBindingObserver {
   List<IconData> listImage = [
     Icons.insert_drive_file,
     Icons.location_on,
@@ -57,11 +57,57 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
     GroceryGotQuestionScreen(),
   ];
 
+  final NotificationRepository _notificationRepo = NotificationRepository();
+  int _unreadNotificationCount = 0;
+  int? _userId;
+  TabController? _tabController;
+  
+  Future<void> _loadUnreadCount() async {
+    if (_userId == null) return;
+    final count = await _notificationRepo.getUnreadCount(_userId!);
+    if (mounted) {
+      setState(() {
+        _unreadNotificationCount = count;
+      });
+    }
+  }
+
+  Future<void> _loadUserIdAndNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    _userId = prefs.getInt('userId');
+    if (_userId != null) {
+      _loadUnreadCount();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    // mFavouriteList = storeMemberItems();
-    // mCartList = storeMemberItems();
+    WidgetsBinding.instance.addObserver(this);
+    _loadUserIdAndNotifications();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tabController?.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
+  // ✅ Được gọi khi app quay lại từ background
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUnreadCount();
+    }
+  }
+
+  // ✅ Listener cho TabController
+  void _onTabChanged() {
+    if (_tabController != null && !_tabController!.indexIsChanging) {
+      // Mỗi khi đổi tab, refresh notification count
+      _loadUnreadCount();
+    }
   }
 
   @override
@@ -183,88 +229,133 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> {
       body: SafeArea(
         child: DefaultTabController(
           length: 4,
-          child: Scaffold(
-            backgroundColor: grocery_app_background,
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              backgroundColor: grocery_colorPrimary,
-              title: Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Builder(
+            builder: (context) {
+              // ✅ Lấy TabController và add listener
+              if (_tabController == null) {
+                _tabController = DefaultTabController.of(context);
+                _tabController?.addListener(_onTabChanged);
+              }
+              
+              return Scaffold(
+                backgroundColor: grocery_app_background,
+                appBar: AppBar(
+                  automaticallyImplyLeading: false,
+                  backgroundColor: grocery_colorPrimary,
+                  title: Container(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            menu,
+                            SizedBox(width: spacing_large),
+                            text(
+                              "Store",
+                              textColor: grocery_color_white,
+                              fontFamily: fontBold,
+                              fontSize: textSizeLargeMedium,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: <Widget>[
+                            GestureDetector(
+                              child: Icon(Icons.search),
+                              onTap: () {
+                                GrocerySearch().launch(context);
+                              },
+                            ),
+                            SizedBox(width: spacing_standard_new),
+                            GestureDetector(
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Icon(Icons.notifications),
+                                  if (_unreadNotificationCount > 0)
+                                    Positioned(
+                                      right: -2,
+                                      top: -2,
+                                      child: Container(
+                                        padding: EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          _unreadNotificationCount > 99 
+                                              ? '99+' 
+                                              : _unreadNotificationCount.toString(),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              onTap: () async {
+                                await GroceryNotification().launch(context);
+                                // Reload unread count khi quay lại
+                                _loadUnreadCount();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  bottom: TabBar(
+                    controller: _tabController,
+                    indicatorColor: grocery_color_white,
+                    tabs: [
+                      Tab(
+                        icon: Image.asset(
+                          grocery_ic_shop,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
+                      Tab(icon: Icon(Icons.shopping_basket)),
+                      Tab(
+                        icon: Image.asset(
+                          grocery_ic_outline_favourite,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
+                      Tab(
+                        icon: Image.asset(
+                          Grocery_ic_User,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                body: TabBarView(
+                  controller: _tabController,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        menu,
-                        SizedBox(width: spacing_large),
-                        text(
-                          "Store",
-                          textColor: grocery_color_white,
-                          fontFamily: fontBold,
-                          fontSize: textSizeLargeMedium,
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        GestureDetector(
-                          child: Icon(Icons.search),
-                          onTap: () {
-                            //đoạn này comment lại vì chưa làm nếu khi nào làm thì chỉ cần gọi tới widget đó
-                            // GrocerySearch().launch(context);
-                          },
-                        ),
-                        SizedBox(width: spacing_standard_new),
-                        GestureDetector(
-                          child: Icon(Icons.notifications),
-                          onTap: () {
-                            //đoạn này comment lại vì chưa làm nếu khi nào làm thì chỉ cần gọi tới widget đórrr
-                            // GroceryNotification().launch(context);
-                          },
-                        ),
-                      ],
-                    ),
+                    HomePage(),
+                    CartPage(),
+                    HomePage(),
+                    ProfilePage(),
                   ],
                 ),
-              ),
-              bottom: TabBar(
-                indicatorColor: grocery_color_white,
-                tabs: [
-                  Tab(
-                    icon: Image.asset(
-                      grocery_ic_shop,
-                      color: grocery_color_white,
-                      height: 20,
-                      width: 20,
-                    ),
-                  ),
-                  Tab(icon: Icon(Icons.shopping_basket)),
-                  Tab(
-                    icon: Image.asset(
-                      grocery_ic_outline_favourite,
-                      color: grocery_color_white,
-                      height: 20,
-                      width: 20,
-                    ),
-                  ),
-                  Tab(
-                    icon: Image.asset(
-                      Grocery_ic_User,
-                      color: grocery_color_white,
-                      height: 20,
-                      width: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              children: <Widget>[
-                HomePage(),
-                CartPage(),
-                FavoritePage(),
-                ProfilePage(),
-              ],
-            ),
+              );
+            },
+
           ),
         ),
       ),

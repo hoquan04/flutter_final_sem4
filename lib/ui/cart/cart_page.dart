@@ -14,18 +14,33 @@ class CartPage extends StatefulWidget {
   State<CartPage> createState() => _CartPageState();
 }
 
-class _CartPageState extends State<CartPage> {
+class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
   final CartRepository _repo = CartRepository();
   Future<List<CartDto>> _cartFuture = Future.value([]);
 
   Set<int> _selectedItems = {};
   int? userId;
-  bool _isEditMode = false; // ✅ trạng thái sửa
+  bool _isEditMode = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUserAndCart();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // ✅ Được gọi khi app quay lại từ background hoặc từ page khác
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadCart();
+    }
   }
 
   Future<void> _loadUserAndCart() async {
@@ -73,51 +88,77 @@ class _CartPageState extends State<CartPage> {
         .fold<double>(0.0, (sum, item) => sum + (item.price * item.quantity));
   }
 
+  // ✅ Navigate đến checkout và handle result
+  Future<void> _navigateToCheckout(List<CartDto> selectedItems) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutPage(selectedItems: selectedItems),
+      ),
+    );
+
+    // ✅ Nếu checkout thành công
+    if (result == true && mounted) {
+      // Clear selected items và reload cart
+      setState(() {
+        _selectedItems.clear();
+      });
+      _loadCart();
+      
+      // Hiển thị thông báo
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Đơn hàng đã được đặt thành công!"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: FutureBuilder<List<CartDto>>(
-        future: _cartFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: FutureBuilder<List<CartDto>>(
+          future: _cartFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+
+            int count = snapshot.hasData ? snapshot.data!.length : 0;
+            return Row(
+              children: [
+                const Icon(Icons.shopping_cart, color: Color(0xFF00c97b)),
+                const SizedBox(width: 8),
+                Text("Giỏ hàng ($count)", style: const TextStyle(color: Colors.black)),
+              ],
             );
-          }
-
-          int count = snapshot.hasData ? snapshot.data!.length : 0;
-          return Row(
-            children: [
-              const Icon(Icons.shopping_cart, color: Color(0xFF00c97b)),
-              const SizedBox(width: 8),
-              Text("Giỏ hàng ($count)", style: const TextStyle(color: Colors.black)),
-            ],
-          );
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _isEditMode = !_isEditMode;
-            });
           },
-          child: Text(
-            _isEditMode ? "Xong" : "Sửa",
-            style: const TextStyle(color: Colors.red, fontSize: 16),
-          ),
-        )
-      ],
-    ),
-
-
-    body: FutureBuilder<List<CartDto>>(
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _isEditMode = !_isEditMode;
+              });
+            },
+            child: Text(
+              _isEditMode ? "Xong" : "Sửa",
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+            ),
+          )
+        ],
+      ),
+      body: FutureBuilder<List<CartDto>>(
         future: _cartFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -166,7 +207,6 @@ class _CartPageState extends State<CartPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // ✅ Tên sản phẩm
                                 Text(
                                   item.productName,
                                   maxLines: 2,
@@ -174,8 +214,6 @@ class _CartPageState extends State<CartPage> {
                                   style: const TextStyle(fontSize: 14),
                                 ),
                                 const SizedBox(height: 6),
-
-                                // ✅ Giá + nút tăng giảm nằm cùng 1 hàng
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +221,6 @@ class _CartPageState extends State<CartPage> {
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // giá gốc (1 sản phẩm)
                                         Text(
                                           "${item.price}đ",
                                           style: const TextStyle(
@@ -193,8 +230,6 @@ class _CartPageState extends State<CartPage> {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-
-                                        // thành tiền = giá * số lượng
                                         Text(
                                           "Thành tiền: ${(item.price * item.quantity).toStringAsFixed(0)}đ",
                                           style: const TextStyle(
@@ -204,8 +239,6 @@ class _CartPageState extends State<CartPage> {
                                         ),
                                       ],
                                     ),
-
-                                    // cụm tăng giảm
                                     Row(
                                       children: [
                                         _quantityButton(
@@ -216,7 +249,8 @@ class _CartPageState extends State<CartPage> {
                                           width: 40,
                                           height: 28,
                                           child: TextFormField(
-                                            initialValue: item.quantity.toString(), // ✅ không reset controller
+                                            key: ValueKey('quantity_${item.cartId}_${item.quantity}'),
+                                            initialValue: item.quantity.toString(),
                                             textAlign: TextAlign.center,
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
@@ -233,8 +267,6 @@ class _CartPageState extends State<CartPage> {
                                             },
                                           ),
                                         ),
-
-
                                         _quantityButton(
                                           icon: Icons.add,
                                           onTap: () => _increaseQuantity(item),
@@ -243,21 +275,15 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                   ],
                                 ),
-
                               ],
                             ),
                           ),
-
-
                         ],
                       ),
                     );
                   },
                 ),
               ),
-
-              // ✅ Footer: chế độ Đặt hàng hoặc Xóa
-              // ✅ Footer: chế độ Đặt hàng hoặc Xóa
               FutureBuilder<double>(
                 future: _getTotalPrice(cartItems),
                 builder: (context, snapshot) {
@@ -273,7 +299,6 @@ class _CartPageState extends State<CartPage> {
                     ),
                     child: Row(
                       children: [
-                        // Checkbox chọn tất cả
                         Checkbox(
                           value: isAllSelected,
                           onChanged: (checked) {
@@ -287,10 +312,7 @@ class _CartPageState extends State<CartPage> {
                           },
                         ),
                         const Text("Tất cả"),
-
                         const Spacer(),
-
-                        // ✅ Tổng tiền + Nút hành động nằm cùng 1 cụm bên phải
                         Row(
                           children: [
                             if (!_isEditMode)
@@ -305,8 +327,6 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                               ),
-
-                            // Nút hành động
                             if (_isEditMode)
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -328,17 +348,7 @@ class _CartPageState extends State<CartPage> {
                                     );
                                     return;
                                   }
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CheckoutPage(selectedItems: selected),
-                                    ),
-                                  ).then((value) {
-                                    if (value == true) {
-                                      _loadCart(); // ✅ Làm mới giỏ hàng sau khi đặt hàng
-                                    }
-                                  });
-
+                                  _navigateToCheckout(selected);
                                 },
                                 child: Text("Mua hàng (${_selectedItems.length})"),
                               ),
@@ -347,11 +357,8 @@ class _CartPageState extends State<CartPage> {
                       ],
                     ),
                   );
-
                 },
               ),
-
-
             ],
           );
         },
@@ -359,7 +366,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 }
-
 
 Widget _quantityButton({required IconData icon, required VoidCallback onTap}) {
   return InkWell(

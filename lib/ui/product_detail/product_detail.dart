@@ -270,18 +270,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 horizontal: 12,
                                 vertical: 6,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Chỉ còn ${widget.product.stockQuantity} sản phẩm',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              // decoration: BoxDecoration(
+                              //   color: Colors.red,
+                              //   borderRadius: BorderRadius.circular(8),
+                              // ),
+                              // child: Text(
+                              //   'Chỉ còn ${widget.product.stockQuantity} sản phẩm',
+                              //   style: const TextStyle(
+                              //     color: Colors.white,
+                              //     fontSize: 12,
+                              //     fontWeight: FontWeight.w600,
+                              //   ),
+                              // ),
                             ),
                           ),
                       ],
