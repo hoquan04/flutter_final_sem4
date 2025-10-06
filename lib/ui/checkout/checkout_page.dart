@@ -16,6 +16,8 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  final _formKey = GlobalKey<FormState>();
+
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -25,7 +27,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   LatLng? _selectedLocation;
   final _repo = CheckoutRepository();
 
-  // ✅ Input decoration có viền xanh lá cây
   InputDecoration _inputDeco(String label) {
     return InputDecoration(
       labelText: label,
@@ -41,7 +42,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  // ✅ Chọn vị trí trên bản đồ
   Future<void> _openMapPicker() async {
     final LatLng? result = await Navigator.push(
       context,
@@ -56,15 +56,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  // ✅ Gọi API checkout
   Future<void> _submitOrder() async {
-    if (_nameCtrl.text.isEmpty ||
-        _phoneCtrl.text.isEmpty ||
-        _addressCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Vui lòng nhập đầy đủ thông tin giao hàng")),
-      );
-      return;
+    if (!_formKey.currentState!.validate()) {
+      return; // ❌ Nếu form chưa hợp lệ thì dừng lại
     }
 
     try {
@@ -73,10 +67,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final dto = CheckoutRequestDto(
         userId: widget.selectedItems.first.userId,
         cartIds: cartIds,
-        recipientName: _nameCtrl.text,
-        phoneNumber: _phoneCtrl.text,
-        email: _emailCtrl.text.isNotEmpty ? _emailCtrl.text : null,
-        address: _addressCtrl.text,
+        recipientName: _nameCtrl.text.trim(),
+        phoneNumber: _phoneCtrl.text.trim(),
+        email: _emailCtrl.text.isNotEmpty ? _emailCtrl.text.trim() : null,
+        address: _addressCtrl.text.trim(),
         city: "not city",
         postalCode: "10000",
         paymentMethod: _selectedMethod,
@@ -84,7 +78,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       if (_selectedMethod == "CashOnDelivery") {
         final res = await _repo.checkout(dto);
-
         if (res.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("✅ ${res.message}")),
@@ -95,13 +88,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
             SnackBar(content: Text("❌ ${res.message}")),
           );
         }
-      } else {
-        Navigator.push(
+      } else if (_selectedMethod == "VNPay") {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PaymentPage(dto: dto, method: _selectedMethod),
           ),
         );
+
+        if (result == true) {
+          Navigator.pop(context, true); // ✅ báo CheckoutPage cũng hoàn tất
+        }
+
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,94 +117,136 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text("Checkout")),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        children: [
-          TextField(controller: _nameCtrl, decoration: _inputDeco("Họ và tên")),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _phoneCtrl,
-            keyboardType: TextInputType.phone,
-            decoration: _inputDeco("Số điện thoại"),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: _inputDeco("Email (không bắt buộc)"),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _addressCtrl,
-            decoration: _inputDeco("Địa chỉ giao hàng").copyWith(
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.map, color: Colors.green),
-                onPressed: _openMapPicker,
-              ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          children: [
+            // Họ và tên
+            TextFormField(
+              controller: _nameCtrl,
+              keyboardType: TextInputType.text,
+              textCapitalization: TextCapitalization.words,
+              decoration: _inputDeco("Họ và tên"),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return "⚠️ Vui lòng nhập họ và tên";
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _selectedMethod,
-            items: ["CashOnDelivery", "CreditCard", "Momo", "BankTransfer"]
-                .map((method) {
-              return DropdownMenuItem(
-                value: method,
-                child: Text(
-                  method == "CashOnDelivery"
-                      ? "Tiền mặt"
-                      : method == "CreditCard"
-                      ? "Thẻ tín dụng"
-                      : method == "Momo"
-                      ? "Momo"
-                      : "Chuyển khoản",
-                ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) setState(() => _selectedMethod = value);
-            },
-            decoration: _inputDeco("Phương thức thanh toán"),
-          ),
-          const SizedBox(height: 20),
-          const Divider(),
-          ...items.map(
-                (e) => ListTile(
-              leading: e.imageUrl != null
-                  ? Image.network(
-                ApiConstants.sourceImage + (e.imageUrl ?? ""),
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              )
-                  : const Icon(Icons.image),
-              title: Text(e.productName),
-              subtitle: Text("${e.price}đ x ${e.quantity}"),
-              trailing:
-              Text("${(e.price * e.quantity).toStringAsFixed(0)}đ"),
+            const SizedBox(height: 12),
+
+            // Số điện thoại
+            TextFormField(
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: _inputDeco("Số điện thoại"),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return "⚠️ Vui lòng nhập số điện thoại";
+                }
+                if (!RegExp(r'^(0|\+84)\d{9,10}$').hasMatch(value)) {
+                  return "⚠️ Số điện thoại không hợp lệ";
+                }
+                return null;
+              },
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Tổng: ${total.toStringAsFixed(0)}đ",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+            const SizedBox(height: 12),
+
+            // Email (không bắt buộc)
+            TextFormField(
+              controller: _emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: _inputDeco("Email (không bắt buộc)"),
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return "⚠️ Email không hợp lệ";
+                  }
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Địa chỉ
+            TextFormField(
+              controller: _addressCtrl,
+              decoration: _inputDeco("Địa chỉ giao hàng").copyWith(
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.map, color: Colors.green),
+                  onPressed: _openMapPicker,
                 ),
               ),
-              ElevatedButton(
-                onPressed: _submitOrder,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00c97b)),
-                child: const Text("Đặt hàng"),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return "⚠️ Vui lòng nhập địa chỉ";
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Phương thức thanh toán
+            DropdownButtonFormField<String>(
+              value: _selectedMethod,
+              items: ["CashOnDelivery", "VNPay"].map((method) {
+                return DropdownMenuItem(
+                  value: method,
+                  child: Text(method == "CashOnDelivery" ? "Tiền mặt" : "VNPay"),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _selectedMethod = value);
+              },
+              decoration: _inputDeco("Phương thức thanh toán"),
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+
+            // Danh sách sản phẩm
+            ...items.map(
+                  (e) => ListTile(
+                leading: e.imageUrl != null
+                    ? Image.network(
+                  ApiConstants.sourceImage + (e.imageUrl ?? ""),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                )
+                    : const Icon(Icons.image),
+                title: Text(e.productName),
+                subtitle: Text("${e.price}đ x ${e.quantity}"),
+                trailing: Text("${(e.price * e.quantity).toStringAsFixed(0)}đ"),
               ),
-            ],
-          ),
-        ],
+            ),
+
+            // Tổng tiền + nút đặt hàng
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Tổng: ${total.toStringAsFixed(0)}đ",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: _submitOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00c97b),
+                  ),
+                  child: const Text("Đặt hàng"),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

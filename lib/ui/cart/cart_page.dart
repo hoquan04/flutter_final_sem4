@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_sem4/data/model/CartDto.dart';
+import 'package:flutter_final_sem4/data/model/product.dart';
 import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
 import 'package:flutter_final_sem4/data/service/api_constants.dart';
 import 'package:flutter_final_sem4/ui/checkout/checkout_page.dart';
+import 'package:flutter_final_sem4/ui/product_detail/product_detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CartPage extends StatefulWidget {
@@ -17,11 +19,37 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   final CartRepository _repo = CartRepository();
   Future<List<CartDto>> _cartFuture = Future.value([]);
-
+  final _controllers = <int, TextEditingController>{};
   Set<int> _selectedItems = {};
   int? userId;
   bool _isEditMode = false; // ✅ trạng thái sửa
 
+  Widget _buildQuantityField(CartDto item) {
+    _controllers[item.cartId] ??=
+        TextEditingController(text: item.quantity.toString());
+
+    return SizedBox(
+      width: 40,
+      height: 28,
+      child: TextField(
+        controller: _controllers[item.cartId],
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+        onSubmitted: (value) async {
+          final newQuantity = int.tryParse(value) ?? item.quantity;
+          if (newQuantity > 0 && newQuantity != item.quantity) {
+            await _repo.updateQuantity(item.cartId, newQuantity);
+            _loadCart();
+          }
+        },
+      ),
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -43,10 +71,22 @@ class _CartPageState extends State<CartPage> {
   void _loadCart() {
     if (userId != null) {
       setState(() {
-        _cartFuture = _repo.getCartByUser(userId!);
+        _cartFuture = _repo.getCartByUser(userId!).then((items) {
+          // cập nhật lại controllers cho từng item
+          for (var item in items) {
+            if (_controllers.containsKey(item.cartId)) {
+              _controllers[item.cartId]!.text = item.quantity.toString();
+            } else {
+              _controllers[item.cartId] =
+                  TextEditingController(text: item.quantity.toString());
+            }
+          }
+          return items;
+        });
       });
     }
   }
+
 
   Future<void> _increaseQuantity(CartDto item) async {
     await _repo.updateQuantity(item.cartId, item.quantity + 1);
@@ -134,124 +174,121 @@ class _CartPageState extends State<CartPage> {
                   itemCount: cartItems.length,
                   itemBuilder: (context, index) {
                     final item = cartItems[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Checkbox(
-                            value: _selectedItems.contains(item.cartId),
-                            onChanged: (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  _selectedItems.add(item.cartId);
-                                } else {
-                                  _selectedItems.remove(item.cartId);
-                                }
-                              });
-                            },
+                    return InkWell(
+                      onTap: () {
+                        // ⚡ CartDto bây giờ có đủ thông tin
+                        final product = Product(
+                          productId: item.productId,
+                          categoryId: 0, // vẫn để mặc định vì CartDto chưa có categoryId
+                          name: item.productName,
+                          description: item.description,   // ✅ lấy từ CartDto
+                          price: item.price,
+                          stockQuantity: item.stockQuantity, // ✅ lấy từ CartDto
+                          imageUrl: item.imageUrl,
+                          createdAt: item.createdAt, // ✅ lấy từ CartDto (đã parse DateTime trong fromJson)
+                        );
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailPage(product: product),
                           ),
-                          SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: Image.network(
-                              ApiConstants.sourceImage + (item.imageUrl ?? ""),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.image, size: 50),
+                        );
+                      },
+
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: _selectedItems.contains(item.cartId),
+                              onChanged: (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _selectedItems.add(item.cartId);
+                                  } else {
+                                    _selectedItems.remove(item.cartId);
+                                  }
+                                });
+                              },
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // ✅ Tên sản phẩm
-                                Text(
-                                  item.productName,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                const SizedBox(height: 6),
+                            SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Image.network(
+                                ApiConstants.sourceImage + (item.imageUrl ?? ""),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 50),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // ✅ Tên sản phẩm
+                                  Text(
+                                    item.productName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 6),
 
-                                // ✅ Giá + nút tăng giảm nằm cùng 1 hàng
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // giá gốc (1 sản phẩm)
-                                        Text(
-                                          "${item.price}đ",
-                                          style: const TextStyle(
-                                            color: Colors.red,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-
-                                        // thành tiền = giá * số lượng
-                                        Text(
-                                          "Thành tiền: ${(item.price * item.quantity).toStringAsFixed(0)}đ",
-                                          style: const TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // cụm tăng giảm
-                                    Row(
-                                      children: [
-                                        _quantityButton(
-                                          icon: Icons.remove,
-                                          onTap: () => _decreaseQuantity(item),
-                                        ),
-                                        SizedBox(
-                                          width: 40,
-                                          height: 28,
-                                          child: TextFormField(
-                                            initialValue: item.quantity.toString(), // ✅ không reset controller
-                                            textAlign: TextAlign.center,
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding: EdgeInsets.zero,
+                                  // ✅ Giá + nút tăng giảm
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "${item.price}đ",
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
                                             ),
-                                            onFieldSubmitted: (value) async {
-                                              final newQuantity = int.tryParse(value) ?? item.quantity;
-                                              if (newQuantity > 0 && newQuantity != item.quantity) {
-                                                await _repo.updateQuantity(item.cartId, newQuantity);
-                                                _loadCart();
-                                              }
-                                            },
                                           ),
-                                        ),
-
-
-                                        _quantityButton(
-                                          icon: Icons.add,
-                                          onTap: () => _increaseQuantity(item),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-
-                              ],
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Thành tiền: ${(item.price * item.quantity).toStringAsFixed(0)}đ",
+                                            style: const TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          _quantityButton(
+                                            icon: Icons.remove,
+                                            onTap: () => _decreaseQuantity(item),
+                                          ),
+                                          SizedBox(
+                                            width: 40,
+                                            height: 28,
+                                            child: _buildQuantityField(item),
+                                          ),
+                                          _quantityButton(
+                                            icon: Icons.add,
+                                            onTap: () => _increaseQuantity(item),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-
-
-                        ],
+                          ],
+                        ),
                       ),
                     );
+
                   },
                 ),
               ),
@@ -357,6 +394,7 @@ class _CartPageState extends State<CartPage> {
         },
       ),
     );
+
   }
 }
 
