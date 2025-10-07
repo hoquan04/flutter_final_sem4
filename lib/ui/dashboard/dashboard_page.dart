@@ -348,8 +348,8 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> with Wi
                   controller: _tabController,
                   children: <Widget>[
                     HomePage(),
-                    CartPage(),
-                    HomePage(),
+                    CartPage(onOrderCompleted: _loadUnreadCount),
+                    FavoritePage(),
                     ProfilePage(),
                   ],
                 ),

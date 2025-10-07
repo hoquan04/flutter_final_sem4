@@ -213,11 +213,9 @@ class _ProductCardState extends State<ProductCard> {
                       final userId = prefs.getInt("userId");
 
                       if (userId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("⚠️ Vui lòng đăng nhập trước"),
-                          ),
-                        );
+
+                        _showOverlayToast(context, "⚠️ Vui lòng đăng nhập trước", Colors.orange);
+
                         return;
                       }
 
@@ -228,16 +226,23 @@ class _ProductCardState extends State<ProductCard> {
                         1,
                       );
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            success
-                                ? "✅ Đã thêm ${widget.product.name} vào giỏ hàng"
-                                : "❌ Thêm giỏ hàng thất bại",
-                          ),
-                        ),
-                      );
+                      if (success) {
+                        _showOverlayToast(
+                          context,
+                          "🛒 Đã thêm ${widget.product.name} vào giỏ hàng",
+
+                          Colors.green,
+                        );
+                      } else {
+                        _showOverlayToast(
+                          context,
+                          "❌ Thêm giỏ hàng thất bại",
+                          Colors.redAccent,
+                        );
+                      }
+
                     },
+
                   ),
                 ],
               ),
@@ -248,3 +253,72 @@ class _ProductCardState extends State<ProductCard> {
     );
   }
 }
+
+
+void _showOverlayToast(BuildContext context, String message, Color color) {
+  final overlay = Overlay.of(context);
+  final overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: MediaQuery.of(context).size.height * 0.42,
+      left: MediaQuery.of(context).size.width * 0.18,
+      right: MediaQuery.of(context).size.width * 0.18,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.8, end: 1.0),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutBack,
+        builder: (context, scale, child) => Transform.scale(
+          scale: scale,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95), // ⚪ nền trắng sáng mờ như shopping
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: color,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        decoration:
+                        TextDecoration.none, // 🚫 bỏ gạch chân hoàn toàn
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  overlay.insert(overlayEntry);
+
+  Future.delayed(const Duration(milliseconds: 1500), () {
+    overlayEntry.remove();
+  });
+}
+

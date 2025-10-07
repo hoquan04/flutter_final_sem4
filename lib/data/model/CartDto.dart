@@ -1,4 +1,3 @@
-import 'product.dart';
 class CartDto {
   final int cartId;
   final int userId;
@@ -8,6 +7,10 @@ class CartDto {
   final String? imageUrl;
   final double price;
 
+  final String? description;
+  final int stockQuantity;
+  final DateTime createdAt;  // ✅ luôn có giá trị
+
   CartDto({
     required this.cartId,
     required this.userId,
@@ -16,6 +19,9 @@ class CartDto {
     required this.productName,
     this.imageUrl,
     required this.price,
+    this.description,
+    this.stockQuantity = 0,
+    required this.createdAt,
   });
 
   factory CartDto.fromJson(Map<String, dynamic> json) {
@@ -27,6 +33,9 @@ class CartDto {
       productName: json['productName'] ?? '',
       imageUrl: json['imageUrl'],
       price: (json['price'] ?? 0).toDouble(),
+      description: json['description'],
+      stockQuantity: json['stockQuantity'] ?? 0,
+      createdAt: DateTime.parse(json['createdAt']), // ✅ luôn parse
     );
   }
 }
