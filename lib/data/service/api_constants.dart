@@ -1,11 +1,11 @@
 class ApiConstants {
   // 👉 Nếu chạy trên emulator Android thì đổi localhost thành 10.0.2.2
   //đây là cổng chạy gọi đến api phải là 10.0.2.2 chứ ko được gọi là localhost
-  // static const String domain = "10.0.2.2:7245";
+  static const String domain = "10.0.2.2:7245";
   // trường
   // static const String domain = "172.16.0.191:7245";
   //quan
-  static const String domain = "192.168.1.32:7245";
+  // static const String domain = "192.168.1.32:7245";
 
   // static const String domain = "10.0.2.2:7245"; // cho Android Emulator
   // static const String domain = "172.16.0.110:7245"; // cho device thật cùng WiFi
@@ -28,6 +28,7 @@ class ApiConstants {
   static String checkoutUrl = "$baseUrl/checkout";
 
   static String reviewUrl = "$baseUrl/review";
+  static String notificationUrl = "$baseUrl/notification";
 
 }
 

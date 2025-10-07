@@ -33,7 +33,7 @@ class _TestProductDetailPageState extends State<TestProductDetailPage> {
       
       // Tìm sản phẩm có productId = 3
       final foundProduct = products.firstWhere(
-        (p) => p.productId == 4,
+        (p) => p.productId == 6,
         orElse: () => throw Exception('Không tìm thấy sản phẩm có ID = 3'),
       );
 

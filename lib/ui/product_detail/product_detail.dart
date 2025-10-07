@@ -3,6 +3,7 @@ import 'package:flutter_final_sem4/data/model/product.dart';
 import 'package:flutter_final_sem4/data/model/review.dart';
 import 'package:flutter_final_sem4/data/repository/CartRepository.dart';
 import 'package:flutter_final_sem4/data/service/api_constants.dart';
+import 'package:flutter_final_sem4/data/service/favorite_service.dart';
 import 'package:flutter_final_sem4/data/service/review_service.dart';
 import 'package:flutter_final_sem4/ui/cart/cart_page.dart';
 import 'package:flutter_final_sem4/ui/review/reviewPage.dart';
@@ -107,22 +108,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> with TickerProvid
     }
   }
 
-  void toggleFavorite() {
-    setState(() {
-      isFavorite = !isFavorite;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            isFavorite
-                ? 'Đã thêm vào yêu thích'
-                : 'Đã xóa khỏi yêu thích'
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
+
+
+
 
   void navigateToReviewPage() async {
     final result = await Navigator.push(
@@ -267,6 +255,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with TickerProvid
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -283,13 +272,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with TickerProvid
         ),
         actions: [
           // Icon yêu thích
-          IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? Colors.red : Colors.grey.shade600,
-            ),
-            onPressed: toggleFavorite,
-          ),
+
           // Icon giỏ hàng với GlobalKey để bắt tọa độ
           IconButton(
             key: _cartKey,
@@ -315,6 +298,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with TickerProvid
                     children: [
                       // Header với hình ảnh sản phẩm
                       Stack(
+
                         children: [
                           Container(
                             height: 350,

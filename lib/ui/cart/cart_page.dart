@@ -9,8 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class CartPage extends StatefulWidget {
   static String tag = '/CartPage';
+  final VoidCallback? onOrderCompleted; // ✅ callback khi đặt hàng xong
 
-  const CartPage({super.key});
+  const CartPage({super.key, this.onOrderCompleted});
+
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -373,6 +375,7 @@ class _CartPageState extends State<CartPage> {
                                   ).then((value) {
                                     if (value == true) {
                                       _loadCart(); // ✅ Làm mới giỏ hàng sau khi đặt hàng
+                                      widget.onOrderCompleted?.call();
                                     }
                                   });
 
