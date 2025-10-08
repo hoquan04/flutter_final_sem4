@@ -11,40 +11,45 @@ class AuthRepository {
   Future<User?> login(String email, String password) async {
     try {
       final url = Uri.parse('$baseUrl/login');
-      final body = jsonEncode({"email": email.trim(), "password": password.trim()});
+      final cleanEmail = email.trim().toLowerCase();          // ✅ lowercase + trim
+      final cleanPass  = password.trim();
 
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json", "accept": "application/json"},
-        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'email': cleanEmail, 'password': cleanPass}),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        // body should be JSON, but guard anyway
+        final raw = response.body;
+        if (raw.isEmpty) return null;
+        final data = jsonDecode(raw);
 
-        // API của bạn trả 200 cả khi login thất bại => phải kiểm tra token/user có tồn tại
         if (data != null && data['token'] != null && data['user'] != null) {
           final token = data['token'] as String;
           final userJson = data['user'] as Map<String, dynamic>;
 
-          // Lưu token + 1 vài thông tin user để dùng ở Profile/khởi chạy
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString("auth_token", token);
-          await prefs.setString("fullName", userJson['fullName'] ?? '');
-          await prefs.setString("email", userJson['email'] ?? '');
+          await prefs.setString('auth_token', token);
+          await prefs.setString('fullName', userJson['fullName'] ?? '');
+          await prefs.setString('email', userJson['email'] ?? '');
 
           return User.fromJson(userJson);
         } else {
-          // Login thất bại (API trả message) hoặc format khác
-          print("AuthRepository.login -> failed: ${data['message'] ?? response.body}");
+          // API may return { message: ... } on bad creds
+          // print('login failed: ${data['message'] ?? raw}');
           return null;
         }
       } else {
-        print("AuthRepository.login -> HTTP ${response.statusCode}: ${response.body}");
+        // print('HTTP ${response.statusCode}: ${response.body}');
         return null;
       }
     } catch (e) {
-      print("AuthRepository.login error: $e");
+      // print('login error: $e');
       return null;
     }
   }
