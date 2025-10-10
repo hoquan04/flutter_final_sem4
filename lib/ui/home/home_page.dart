@@ -105,7 +105,7 @@ class _TestProductPageState extends State<HomePage> {
                   } else {
                     // Thêm item 'All' vào đầu danh sách
                     final categories = snapshot.data!;
-                    final allItem = Category(categoryId: -1, name: "All");
+                    final allItem = Category(categoryId: -1, name: "Tất cả");
                     final displayCategories = [allItem, ...categories];
                     return GridView.builder(
                       shrinkWrap: true,

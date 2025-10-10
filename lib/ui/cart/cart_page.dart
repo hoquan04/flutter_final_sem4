@@ -375,7 +375,7 @@ class _CartPageState extends State<CartPage> {
                                   ).then((value) {
                                     if (value == true) {
                                       _loadCart(); // ✅ Làm mới giỏ hàng sau khi đặt hàng
-                                      widget.onOrderCompleted?.call();
+
                                     }
                                   });
 
