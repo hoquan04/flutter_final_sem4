@@ -169,7 +169,7 @@ class _FavoritePageState extends State<FavoritePage> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
-                              childAspectRatio: 0.6,
+                              childAspectRatio: 0.7,
                             ),
                             itemCount: products.length,
                             itemBuilder: (context, index) {
