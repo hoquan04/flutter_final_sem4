@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Profile"),
+        title: const Text("Hồ sơ"),
         backgroundColor: Colors.green,
       ),
       body: SingleChildScrollView(
@@ -97,7 +97,7 @@ class _ProfilePageState extends State<ProfilePage> {
             // Danh sách tuỳ chọn
             ListTile(
               leading: const Icon(Icons.person),
-              title: const Text("Edit Profile"),
+              title: const Text("Chỉnh sửa hồ sơ"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {
                 final result = await Navigator.push(
@@ -113,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.lock),
-              title: const Text("Change Password"),
+              title: const Text("Đổi mật khẩu"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 Navigator.push(
@@ -127,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text("Order History"),
+              title: const Text("lịch sử đơn hàng"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 // TODO: chuyển sang OrderHistoryScreen
@@ -137,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.location_on),
-              title: const Text("Saved Addresses"),
+              title: const Text("Lưu ví trí"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 // TODO: chuyển sang trang địa chỉ
@@ -147,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
+              title: const Text("Cài đặt"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 // TODO: chuyển sang Settings
@@ -157,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout",
+              title: const Text("Đăng xuất",
                   style: TextStyle(color: Colors.red)),
               trailing: const Icon(Icons.arrow_forward_ios,
                   size: 16, color: Colors.red),
