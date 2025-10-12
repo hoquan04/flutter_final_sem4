@@ -1,4 +1,4 @@
-enum PaymentMethod { CashOnDelivery, CreditCard, Momo, BankTransfer, Vnpay }
+enum PaymentMethod { CashOnDelivery, CreditCard, Momo, BankTransfer }
 enum PaymentStatus { Pending, Paid, Failed }
 
 class Payment {

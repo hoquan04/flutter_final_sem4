@@ -67,7 +67,7 @@ class _TestProductPageState extends State<HomePage> {
                   } else {
                     final products = snapshot.data!;
                     return SizedBox(
-                      height: 260,
+                      height: 180,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: products.length,
@@ -76,7 +76,7 @@ class _TestProductPageState extends State<HomePage> {
                         itemBuilder: (context, index) {
                           final p = products[index];
                           return SizedBox(
-                            width: 180,
+                            width: 140,
                             child: ProductCard(product: p),
                           );
                         },
@@ -105,7 +105,7 @@ class _TestProductPageState extends State<HomePage> {
                   } else {
                     // Thêm item 'All' vào đầu danh sách
                     final categories = snapshot.data!;
-                    final allItem = Category(categoryId: -1, name: "Tất cả");
+                    final allItem = Category(categoryId: -1, name: "All");
                     final displayCategories = [allItem, ...categories];
                     return GridView.builder(
                       shrinkWrap: true,
@@ -174,7 +174,7 @@ class _TestProductPageState extends State<HomePage> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            childAspectRatio: 0.6,
+                            childAspectRatio: 0.7,
                           ),
                       itemCount: products.length,
                       itemBuilder: (context, index) {
