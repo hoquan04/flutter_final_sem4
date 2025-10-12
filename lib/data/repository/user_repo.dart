@@ -7,7 +7,7 @@ class UserRepo {
   final String baseUrl = "${ApiConstants.baseUrl}/Auth";
 
   // ✅ Cập nhật thông tin
-  Future<bool> updateProfile(String fullName, String email) async {
+  Future<bool> updateProfile(String fullName) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString("auth_token") ?? "";
@@ -15,7 +15,6 @@ class UserRepo {
       final url = Uri.parse("$baseUrl/profile");
       final body = jsonEncode({
         "fullName": fullName,
-        "email": email,
       });
 
       print("🔹 Update Profile URL: $url");
@@ -37,7 +36,6 @@ class UserRepo {
       if (response.statusCode == 200) {
         // Lưu lại thông tin mới vào local
         await prefs.setString("fullName", fullName);
-        await prefs.setString("email", email);
         return true;
       }
       return false;

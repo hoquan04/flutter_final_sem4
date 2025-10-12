@@ -11,8 +11,6 @@ class UpdateProfilePage extends StatefulWidget {
 
 class _UpdateProfilePageState extends State<UpdateProfilePage> {
   final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
-
   bool _isLoading = false;
 
   @override
@@ -21,39 +19,59 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     _loadUserData();
   }
 
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
-      _fullNameController.text = prefs.getString("fullName") ?? "";
-      _emailController.text = prefs.getString("email") ?? "";
+      _fullNameController.text = prefs.getString('fullName') ?? '';
     });
   }
 
   Future<void> _updateProfile() async {
-    if (_fullNameController.text.trim().isEmpty) {
+    final name = _fullNameController.text.trim();
+
+    if (name.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Vui lòng nhập họ và tên")),
+        const SnackBar(content: Text('❌ Vui lòng nhập họ và tên')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final success = await UserRepo().updateProfile(
-      _fullNameController.text.trim(),
-      _emailController.text.trim(),
-    );
+    try {
+      // ❌ lỗi trước đây: có dấu ; trong ngoặc => cú pháp sai
+      final success = await UserRepo().updateProfile(name);
 
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (success) {
+      if (success) {
+        // cập nhật local cache để màn khác đọc được ngay
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('fullName', name);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Cập nhật thành công')),
+        );
+        Navigator.pop(context, true); // báo về màn trước là đã cập nhật
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Cập nhật thất bại')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Cập nhật thành công")),
-      );
-      Navigator.pop(context, true); // ✅ Trả về true
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Cập nhật thất bại")),
+        SnackBar(content: Text('⚠️ Lỗi: $e')),
       );
     }
   }
@@ -62,7 +80,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cập nhật hồ sơ"),
+        title: const Text('Cập nhật hồ sơ'),
         backgroundColor: Colors.green,
       ),
       body: SingleChildScrollView(
@@ -78,18 +96,14 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 45,
                     backgroundColor: Colors.green,
-                    child: const Icon(Icons.person, size: 60, color: Colors.white),
+                    child: Icon(Icons.person, size: 60, color: Colors.white),
                   ),
                   const SizedBox(height: 20),
-
-                  _buildTextField("Họ và tên", Icons.person, _fullNameController),
+                  _buildTextField('Họ và tên', Icons.person, _fullNameController),
                   const SizedBox(height: 12),
-                  _buildTextField("Email", Icons.email, _emailController),
-                  const SizedBox(height: 20),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -102,10 +116,14 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                         backgroundColor: Colors.green,
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Cập nhật", style: TextStyle(fontSize: 16)),
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                          : const Text('Cập nhật', style: TextStyle(fontSize: 16)),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -118,6 +136,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   Widget _buildTextField(String hint, IconData icon, TextEditingController controller) {
     return TextField(
       controller: controller,
+      textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon),
