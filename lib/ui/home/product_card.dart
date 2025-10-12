@@ -134,35 +134,33 @@ class _ProductCardState extends State<ProductCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: ClipRRect(
+              Container(
+                height: 120, // Chiều cao cố định cho mọi ảnh
+                width: double.infinity,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Icon(
-                                Icons.image,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                        ),
+                  color: Colors.grey[100],
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover, // Phóng ảnh để đầy khung, cắt đều
+                  width: double.infinity,
+                  height: 120,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.image_not_supported,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                )
+                    : const Icon(
+                  Icons.image,
+                  size: 48,
+                  color: Colors.grey,
                 ),
               ),
+
               const SizedBox(height: 8),
               Text(
                 widget.product.name,

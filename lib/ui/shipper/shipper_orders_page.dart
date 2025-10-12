@@ -179,15 +179,15 @@ class _ShipperOrdersPageState extends State<ShipperOrdersPage>
                   ),
                   subtitle: Text(
                     """
-📍 Địa chỉ: ${o.address}
-📞 SĐT: ${o.phoneNumber ?? 'Không có'}
-💳 Thanh toán: ${o.paymentStatus}
-📦 Trạng thái: ${o.status}
-""",
+                    📍 Địa chỉ: ${o.address}
+                    📞 SĐT: ${o.phoneNumber ?? 'Không có'}
+                    💳 Thanh toán: ${o.paymentStatus}
+                    📦 Trạng thái: ${o.status}
+                    """,
                     style: const TextStyle(height: 1.4),
                   ),
                   isThreeLine: true,
-                  trailing: o.status == "Shipping"
+                  trailing: o.status == "Đang giao hàng"
                       ? ElevatedButton(
                     onPressed: () => _completeOrder(o.orderId),
                     style: ElevatedButton.styleFrom(

@@ -157,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout",
+              title: const Text("Đăng xuất",
                   style: TextStyle(color: Colors.red)),
               trailing: const Icon(Icons.arrow_forward_ios,
                   size: 16, color: Colors.red),

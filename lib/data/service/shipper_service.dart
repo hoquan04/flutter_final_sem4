@@ -4,6 +4,8 @@ import 'package:flutter_final_sem4/data/service/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 
+import 'package:nb_utils/nb_utils.dart';
+
 class ShipperService {
   final String baseUrl = "${ApiConstants.baseUrl}/shipper";
 
@@ -63,11 +65,9 @@ class ShipperService {
   }
 
   /// ✅ Hoàn tất giao hàng
-  Future<Map<String, dynamic>> completeOrder(int orderId, [int? shipperId]) async {
-    final url = shipperId == null
-        ? Uri.parse("$baseUrl/orders/$orderId/complete")
-        : Uri.parse("$baseUrl/orders/$orderId/complete?shipperId=$shipperId");
-
+  /// ✅ Hoàn tất giao hàng
+  Future<Map<String, dynamic>> completeOrder(int orderId, int shipperId) async {
+    final url = Uri.parse("${ApiConstants.baseUrl}/Order/shipper/$shipperId/complete/$orderId");
     final response = await http.put(url);
 
     if (response.statusCode == 200) {
@@ -77,23 +77,40 @@ class ShipperService {
     }
   }
 
+
   /// 🔄 Lấy role hiện tại của user (Customer / Shipper / Admin)
   Future<String?> fetchUserRole(int userId) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token'); // ✅ lấy token từ login
+
+      if (token == null) {
+        print("⚠️ Không có token -> không thể lấy role");
+        return null;
+      }
+
       final url = Uri.parse("${ApiConstants.baseUrl}/user/$userId");
-      final res = await http.get(url);
+      final res = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // ✅ Gửi token
+        },
+      );
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data['data']['role']; // 👈 Trả về "Customer" hoặc "Shipper"
+        print("📦 Role API trả về: ${data['data']['role']}");
+        return data['data']['role'];
       } else {
-        print("❌ Không lấy được role: ${res.statusCode}");
+        print("❌ Không lấy được role: ${res.statusCode} | ${res.body}");
         return null;
       }
     } catch (e) {
-      print("❌ Lỗi fetchUserRole: $e");
+      print("🔥 Lỗi fetchUserRole: $e");
       return null;
     }
   }
+
 
 }

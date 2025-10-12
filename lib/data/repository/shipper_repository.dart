@@ -56,11 +56,12 @@ class ShipperRepository {
   /// ✅ Hoàn tất giao hàng
   Future<void> completeOrder(int orderId, int shipperId) async {
     try {
-      final result = await _service.completeOrder(orderId);
+      final result = await _service.completeOrder(orderId, shipperId);
       print("✅ ${result['message'] ?? 'Hoàn tất đơn hàng thành công'}");
     } catch (e) {
       print("❌ Lỗi khi hoàn tất đơn hàng: $e");
     }
   }
+
 
 }

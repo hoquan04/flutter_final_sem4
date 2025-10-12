@@ -1,90 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_sem4/utils/GroceryColors.dart';
-// import 'package:grocery_flutter/screen/PurchaseMoreScreen.dart';
-// import 'package:grocery_flutter/utils/AppWidget.dart';
-// import 'package:grocery_flutter/utils/GeoceryStrings.dart';
-// import 'package:grocery_flutter/utils/GroceryColors.dart';
-// import 'package:grocery_flutter/utils/GroceryConstant.dart';
-// import 'package:nb_utils/nb_utils.dart';
+import 'package:flutter_final_sem4/data/model/product.dart';
+import 'package:flutter_final_sem4/data/service/product_service.dart';
+import 'package:flutter_final_sem4/ui/home/product_card.dart';
 
 class GroceryStoreLocatorScreen extends StatefulWidget {
-  static String tag = '/GroceryStoreLocatorScreen';
-
   const GroceryStoreLocatorScreen({super.key});
 
   @override
-  _GroceryStoreLocatorScreenState createState() => _GroceryStoreLocatorScreenState();
+  State<GroceryStoreLocatorScreen> createState() => _GroceryStoreLocatorScreenState();
 }
 
 class _GroceryStoreLocatorScreenState extends State<GroceryStoreLocatorScreen> {
+  late Future<List<Product>> _futureProducts;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureProducts = ProductService().getAllProducts(); // 🧩 gọi API lấy toàn bộ sản phẩm
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // body: SafeArea(
-      //   child: DefaultTabController(
-      //     length: 1,
-      //     child: Scaffold(
-      //       appBar: PreferredSize(
-      //         preferredSize: Size.fromHeight(120),
-      //         child: Container(
-      //           color: grocery_colorPrimary,
-      //           child: Column(
-      //             crossAxisAlignment: CrossAxisAlignment.start,
-      //             children: <Widget>[
-      //               Row(
-      //                 children: <Widget>[
-      //                   IconButton(
-      //                     onPressed: () {
-      //                       finish(context);
-      //                     },
-      //                     icon: Icon(
-      //                       Icons.clear,
-      //                       size: 30,
-      //                       color: grocery_color_white,
-      //                     ),
-      //                   ).paddingOnly(right: 24),
-      //                   Expanded(child: text(grocery_storeLocator, fontSize: textSizeNormal, textColor: grocery_color_white, fontFamily: fontBold)),
-      //                   Icon(
-      //                     Icons.search,
-      //                     size: 30,
-      //                     color: grocery_color_white,
-      //                   ),
-      //                 ],
-      //               ),
-      //               Container(
-      //                 width: MediaQuery.of(context).size.width,
-      //                 child: TabBar(
-      //                   indicatorWeight: 4.0,
-      //                   indicatorSize: TabBarIndicatorSize.label,
-      //                   indicatorColor: grocery_color_white,
-      //                   labelColor: grocery_color_white,
-      //                   isScrollable: false,
-      //                   unselectedLabelColor: grocery_color_white.withOpacity(0.5),
-      //                   onTap: (index) {
-      //                     //
-      //                   },
-      //                   tabs: [
-      //                     Container(
-      //                       padding: const EdgeInsets.only(bottom: 16),
-      //                       child: Text(
-      //                         grocery_allStores,
-      //                         style: TextStyle(fontSize: textSizeMedium),
-      //                       ),
-      //                     ),
-      //                   ],
-      //                 ),
-      //               ).paddingOnly(top: 24),
-      //             ],
-      //           ).paddingOnly(left: 12, right: 16),
-      //         ),
-      //       ),
-      //       body: TabBarView(
-      //         children: <Widget>[PurchaseMoreScreen()],
-      //         physics: NeverScrollableScrollPhysics(),
-      //       ),
-      //     ),
-      //   ),
-      // ),
+      appBar: AppBar(
+        title: const Text(
+          "Tất cả sản phẩm",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      body: FutureBuilder<List<Product>>(
+        future: _futureProducts,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Lỗi: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("Không có sản phẩm nào"));
+          } else {
+            final products = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GridView.builder(
+                itemCount: products.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 🧩 chia 2 cột
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.7, // chiều cao card
+                ),
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return ProductCard(product: product);
+                },
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }

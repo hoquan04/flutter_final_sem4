@@ -61,6 +61,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
     _notificationTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       if (mounted && _userId != null) {
         _loadUnreadCount();
+        reloadUserRole();
       }
     });
   }
@@ -141,48 +142,44 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
 
     // 🧩 Phân quyền giao diện menu
     if (_role == "Shipper") {
-      // 🚚 Shipper
       listText = [
-        grocery_orderHistory,
-        grocery_trackOrders,
+
         grocery_lbl_save_cart,
-        grocery_storeLocator,
+
         grocery_lbl_Terms_and_Condition,
         grocery_gotQuestion,
         "Đơn hàng giao hàng",
       ];
 
       listClick = [
-        OrderHistoryPage(),
-        GroceryTrackOrderScreen(),
-        GrocerySaveCart(),
-        GroceryStoreLocatorScreen(),
+
+        CartPage(),
+
         GroceryTermCondition(),
         GroceryGotQuestionScreen(),
         const ShipperOrdersPage(),
       ];
     } else {
-      // 👤 Customer
       listText = [
-        grocery_orderHistory,
-        grocery_trackOrders,
+
         grocery_lbl_save_cart,
-        grocery_storeLocator,
+
         grocery_lbl_Terms_and_Condition,
         grocery_gotQuestion,
-        "Đăng ký Shipper",
+        "Đăng ký vận chuyển",
       ];
 
       listClick = [
-        OrderHistoryPage(),
-        GroceryTrackOrderScreen(),
-        GrocerySaveCart(),
-        GroceryStoreLocatorScreen(),
+
+        CartPage(),
+
         GroceryTermCondition(),
         GroceryGotQuestionScreen(),
         const ShipperRegisterPage(),
       ];
     }
+
+
 
     // 🧭 Hàm build menu
     Widget mMenuOption(var icon, var value, Widget tag) {
@@ -254,7 +251,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
                         }),
                         const SizedBox(width: spacing_large),
                         text(
-                          "Cửa hàng nhóm 1",
+                          "DANH SÁCH MỘT SỐ TRANG KHÁC",
                           textColor: grocery_Color_black,
                           fontFamily: fontBold,
                           fontSize: textSizeLargeMedium,
@@ -330,7 +327,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
                           menu,
                           const SizedBox(width: spacing_large),
                           text(
-                            "Cửa hàng",
+                            "Cửa hàng hoa quả",
                             textColor: grocery_color_white,
                             fontFamily: fontBold,
                             fontSize: textSizeLargeMedium,

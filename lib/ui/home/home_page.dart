@@ -67,7 +67,7 @@ class _TestProductPageState extends State<HomePage> {
                   } else {
                     final products = snapshot.data!;
                     return SizedBox(
-                      height: 180,
+                      height: 260,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: products.length,
@@ -76,7 +76,7 @@ class _TestProductPageState extends State<HomePage> {
                         itemBuilder: (context, index) {
                           final p = products[index];
                           return SizedBox(
-                            width: 140,
+                            width: 180,
                             child: ProductCard(product: p),
                           );
                         },
@@ -174,7 +174,7 @@ class _TestProductPageState extends State<HomePage> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            childAspectRatio: 0.7,
+                            childAspectRatio: 0.6,
                           ),
                       itemCount: products.length,
                       itemBuilder: (context, index) {
