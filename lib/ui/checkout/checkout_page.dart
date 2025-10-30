@@ -58,7 +58,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Future<void> _submitOrder() async {
     if (!_formKey.currentState!.validate()) {
-      return; // ❌ Nếu form chưa hợp lệ thì dừng lại
+      return;
     }
 
     try {
@@ -89,24 +89,37 @@ class _CheckoutPageState extends State<CheckoutPage> {
           );
         }
       } else if (_selectedMethod == "VNPay") {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PaymentPage(dto: dto, method: _selectedMethod),
-          ),
-        );
+        final res = await _repo.checkout(dto); // ✅ Gọi 1 lần duy nhất ở đây
 
-        if (result == true) {
-          Navigator.pop(context, true); // ✅ báo CheckoutPage cũng hoàn tất
+        if (res.success && res.data != null && res.data["paymentUrl"] != null) {
+          final paymentUrl = res.data["paymentUrl"];
+
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PaymentPage(
+                dto: dto,
+                method: _selectedMethod,
+                paymentUrl: paymentUrl, // 👈 thêm tham số mới
+              ),
+            ),
+          );
+
+          if (result == true) Navigator.pop(context, true);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("❌ Lỗi: ${res.message ?? "Không tạo được link VNPay"}")),
+          );
         }
-
       }
-    } catch (e) {
+
+  } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("❌ Lỗi đặt hàng: $e")),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
