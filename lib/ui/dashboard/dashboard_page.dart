@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_sem4/data/model/GroceryModel.dart';
 import 'package:flutter_final_sem4/data/repository/notification_repo.dart';
-import 'package:flutter_final_sem4/data/service/shipper_service.dart';
 import 'package:flutter_final_sem4/ui/cart/cart_page.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryGotQuestion.dart';
 import 'package:flutter_final_sem4/ui/dashboard/GroceryNotification.dart';
@@ -13,14 +13,13 @@ import 'package:flutter_final_sem4/ui/dashboard/GroceryTrackOrder.dart';
 import 'package:flutter_final_sem4/ui/home/home_page.dart';
 import 'package:flutter_final_sem4/ui/profile/profile_page.dart';
 import 'package:flutter_final_sem4/ui/favorite/favorite_page.dart';
-import 'package:flutter_final_sem4/ui/shipper/shipper_orders_page.dart';
-import 'package:flutter_final_sem4/ui/shipper/shipper_register_page.dart';
 import 'package:flutter_final_sem4/utils/AppWidget.dart';
 import 'package:flutter_final_sem4/utils/GeoceryStrings.dart';
 import 'package:flutter_final_sem4/utils/GroceryColors.dart';
 import 'package:flutter_final_sem4/utils/GroceryConstant.dart';
+import 'package:flutter_final_sem4/utils/GroceryImages.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'dart:async';
+
 class GroceryDashBoardScreen extends StatefulWidget {
   static String tag = '/GroceryDashBoardScreen';
 
@@ -30,92 +29,72 @@ class GroceryDashBoardScreen extends StatefulWidget {
   _GroceryDashBoardScreenState createState() => _GroceryDashBoardScreenState();
 }
 
-class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
-    with WidgetsBindingObserver {
-  int? _userId;
-  String? _role; // ✅ role giờ là chuỗi ("Customer", "Shipper", "Admin")
-  Timer? _notificationTimer;
-  int _unreadNotificationCount = 0;
-  TabController? _tabController;
-  final NotificationRepository _notificationRepo = NotificationRepository();
-
-  List<String> listText = [];
-  List<Widget> listClick = [];
-
-  final List<IconData> listImage = [
+class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen> with WidgetsBindingObserver {
+  List<IconData> listImage = [
     Icons.insert_drive_file,
     Icons.location_on,
     Icons.shopping_cart,
     Icons.store,
     Icons.help,
     Icons.question_answer,
-    Icons.delivery_dining,
   ];
+
+  var listText = [
+    grocery_orderHistory,
+    grocery_trackOrders,
+    grocery_lbl_save_cart,
+    grocery_storeLocator,
+    grocery_lbl_Terms_and_Condition,
+    grocery_gotQuestion,
+  ];
+
+  var listClick = [
+    OrderHistoryPage(),
+    GroceryTrackOrderScreen(),
+    GrocerySaveCart(),
+    GroceryStoreLocatorScreen(),
+    GroceryTermCondition(),
+    GroceryGotQuestionScreen(),
+  ];
+
+  final NotificationRepository _notificationRepo = NotificationRepository();
+  int _unreadNotificationCount = 0;
+  int? _userId;
+  TabController? _tabController;
+  
+  Future<void> _loadUnreadCount() async {
+    if (_userId == null) return;
+    final count = await _notificationRepo.getUnreadCount(_userId!);
+    if (mounted) {
+      setState(() {
+        _unreadNotificationCount = count;
+      });
+    }
+  }
+
+  Future<void> _loadUserIdAndNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    _userId = prefs.getInt('userId');
+    if (_userId != null) {
+      _loadUnreadCount();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadUserIdAndNotifications();
-    // 🔁 Auto reload thông báo mỗi 15 giây
-    _notificationTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-      if (mounted && _userId != null) {
-        _loadUnreadCount();
-        reloadUserRole();
-      }
-    });
-  }
-
-  Future<void> _loadUserIdAndNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    _userId = prefs.getInt('userId');
-    _role = prefs.getString('role'); // ✅ đúng, vì bạn đã lưu role dạng String
-    // 👈 Lấy role lưu trong SharedPreferences
-    debugPrint("👤 UserId = $_userId | Role = $_role");
-
-    if (_userId != null) {
-      _loadUnreadCount();
-      setState(() {}); // cập nhật lại UI
-    }
-  }
-  Future<void> reloadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
-    if (userId == null) return;
-
-    try {
-      final shipperService = ShipperService(); // 👈 gọi API trực tiếp
-      final newRole = await shipperService.fetchUserRole(userId);
-
-      if (newRole != null) {
-        await prefs.setString('role', newRole);
-        setState(() {
-          _role = newRole; // ✅ giờ _role tồn tại vì đang trong State class
-        });
-        debugPrint("🔁 Reload role từ API: $_role");
-      }
-    } catch (e) {
-      debugPrint("❌ Lỗi reloadUserRole: $e");
-    }
-  }
-
-
-  Future<void> _loadUnreadCount() async {
-    if (_userId == null) return;
-    final count = await _notificationRepo.getUnreadCount(_userId!);
-    if (mounted) {
-      setState(() => _unreadNotificationCount = count);
-    }
   }
 
   @override
   void dispose() {
-    _notificationTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _tabController?.removeListener(_onTabChanged);
     super.dispose();
   }
 
+  // ✅ Được gọi khi app quay lại từ background
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -123,8 +102,10 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
     }
   }
 
+  // ✅ Listener cho TabController
   void _onTabChanged() {
     if (_tabController != null && !_tabController!.indexIsChanging) {
+      // Mỗi khi đổi tab, refresh notification count
       _loadUnreadCount();
     }
   }
@@ -132,74 +113,18 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
   @override
   Widget build(BuildContext context) {
     changeStatusColor(grocery_colorPrimary);
+    var width = MediaQuery.of(context).size.width;
 
-    // 🔄 Chưa load role thì hiển thị loading
-    if (_role == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // 🧩 Phân quyền giao diện menu
-    if (_role == "Shipper") {
-      listText = [
-
-        grocery_lbl_save_cart,
-
-        grocery_lbl_Terms_and_Condition,
-        grocery_gotQuestion,
-        "Đơn hàng giao hàng",
-      ];
-
-      listClick = [
-
-        CartPage(),
-
-        GroceryTermCondition(),
-        GroceryGotQuestionScreen(),
-        const ShipperOrdersPage(),
-      ];
-    } else {
-      listText = [
-
-        grocery_lbl_save_cart,
-
-        grocery_lbl_Terms_and_Condition,
-        grocery_gotQuestion,
-        "Đăng ký vận chuyển",
-      ];
-
-      listClick = [
-
-        CartPage(),
-
-        GroceryTermCondition(),
-        GroceryGotQuestionScreen(),
-        const ShipperRegisterPage(),
-      ];
-    }
-
-
-
-    // 🧭 Hàm build menu
     Widget mMenuOption(var icon, var value, Widget tag) {
       return SizedBox(
         height: 70,
         child: GestureDetector(
-          onTap: () async {
+          onTap: () {
             finish(context);
-            // 🚀 Nếu tag là trang đăng ký shipper thì chờ kết quả và reload
-            if (tag is ShipperRegisterPage) {
-              final result = await tag.launch(context);
-              if (result == true) {
-                await reloadUserRole(); // ✅ cập nhật lại menu
-              }
-            } else {
-              tag.launch(context);
-            }
+            tag.launch(context);
           },
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 height: 50,
                 width: 50,
@@ -224,34 +149,35 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
       );
     }
 
-
-    // 📋 Drawer menu
     final menu = IconButton(
-      icon: const Icon(Icons.menu),
+      icon: Icon(Icons.menu),
       onPressed: () {
         showGeneralDialog(
           context: context,
           barrierDismissible: true,
-          transitionDuration: const Duration(milliseconds: 400),
-          barrierLabel: "Menu",
+          transitionDuration: Duration(milliseconds: 500),
+          barrierLabel: MaterialLocalizations.of(context).dialogLabel,
           barrierColor: Colors.black.withOpacity(0.5),
           pageBuilder: (context, _, __) {
             return Scaffold(
               backgroundColor: Colors.transparent,
               body: Column(
-                children: [
-                  const SizedBox(height: 150),
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 150),
                   Container(
                     color: Colors.white,
                     child: Row(
-                      children: [
-                        Icon(Icons.clear, color: grocery_light_gray_color)
-                            .onTap(() {
+                      children: <Widget>[
+                        Icon(
+                          Icons.clear,
+                          color: grocery_light_gray_color,
+                        ).onTap(() {
                           finish(context);
                         }),
-                        const SizedBox(width: spacing_large),
+                        SizedBox(width: spacing_large),
                         text(
-                          "DANH SÁCH MỘT SỐ TRANG KHÁC",
+                          "Cửa hàng nhóm 1",
                           textColor: grocery_Color_black,
                           fontFamily: fontBold,
                           fontSize: textSizeLargeMedium,
@@ -260,9 +186,9 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
                     ).paddingAll(16),
                   ),
                   Container(
-                    padding: const EdgeInsets.only(left: spacing_standard),
+                    padding: EdgeInsets.only(left: spacing_standard),
                     width: MediaQuery.of(context).size.width,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
                         bottomRight: Radius.circular(20),
@@ -270,7 +196,7 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
                       ),
                     ),
                     child: ListView.builder(
-                      itemCount: listText.length,
+                      itemCount: listImage.length,
                       shrinkWrap: true,
                       itemBuilder: (context, index) {
                         return mMenuOption(
@@ -285,15 +211,12 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
               ),
             );
           },
-          transitionBuilder: (context, animation, _, child) {
+          transitionBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: CurvedAnimation(
                 parent: animation,
                 curve: Curves.easeOut,
-              ).drive(Tween<Offset>(
-                begin: const Offset(0, -1.0),
-                end: Offset.zero,
-              )),
+              ).drive(Tween<Offset>(begin: Offset(0, -1.0), end: Offset.zero)),
               child: child,
             );
           },
@@ -301,133 +224,141 @@ class _GroceryDashBoardScreenState extends State<GroceryDashBoardScreen>
       },
     );
 
-    // 🧭 Layout chính
     return Scaffold(
       backgroundColor: grocery_app_background,
       body: SafeArea(
         child: DefaultTabController(
-          length: _role == "Shipper" ? 5 : 4, // ✅ Shipper có 5 tab, còn lại 4 tab
+          length: 4,
           child: Builder(
             builder: (context) {
+              // ✅ Lấy TabController và add listener
               if (_tabController == null) {
                 _tabController = DefaultTabController.of(context);
                 _tabController?.addListener(_onTabChanged);
               }
-
+              
               return Scaffold(
                 backgroundColor: grocery_app_background,
                 appBar: AppBar(
                   automaticallyImplyLeading: false,
                   backgroundColor: grocery_colorPrimary,
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          menu,
-                          const SizedBox(width: spacing_large),
-                          text(
-                            "Cửa hàng hoa quả",
-                            textColor: grocery_color_white,
-                            fontFamily: fontBold,
-                            fontSize: textSizeLargeMedium,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            child: const Icon(Icons.search),
-                            onTap: () => GrocerySearch().launch(context),
-                          ),
-                          const SizedBox(width: spacing_standard_new),
-                          GestureDetector(
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Icon(Icons.notifications),
-                                if (_unreadNotificationCount > 0)
-                                  Positioned(
-                                    right: -2,
-                                    top: -2,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                          minWidth: 16, minHeight: 16),
-                                      child: Text(
-                                        _unreadNotificationCount > 99
-                                            ? '99+'
-                                            : _unreadNotificationCount.toString(),
-                                        style: const TextStyle(
+                  title: Container(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            menu,
+                            SizedBox(width: spacing_large),
+                            text(
+                              "Store",
+                              textColor: grocery_color_white,
+                              fontFamily: fontBold,
+                              fontSize: textSizeLargeMedium,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: <Widget>[
+                            GestureDetector(
+                              child: Icon(Icons.search),
+                              onTap: () {
+                                GrocerySearch().launch(context);
+                              },
+                            ),
+                            SizedBox(width: spacing_standard_new),
+                            GestureDetector(
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Icon(Icons.notifications),
+                                  if (_unreadNotificationCount > 0)
+                                    Positioned(
+                                      right: -2,
+                                      top: -2,
+                                      child: Container(
+                                        padding: EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          _unreadNotificationCount > 99 
+                                              ? '99+' 
+                                              : _unreadNotificationCount.toString(),
+                                          style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
-                                            fontWeight: FontWeight.bold),
-                                        textAlign: TextAlign.center,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
+                              onTap: () async {
+                                await GroceryNotification().launch(context);
+                                // Reload unread count khi quay lại
+                                _loadUnreadCount();
+                              },
                             ),
-                            onTap: () async {
-                              await GroceryNotification().launch(context);
-                              _loadUnreadCount();
-                            },
-                          ),
-                        ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  bottom: TabBar(
+                    controller: _tabController,
+                    indicatorColor: grocery_color_white,
+                    tabs: [
+                      Tab(
+                        icon: Image.asset(
+                          grocery_ic_shop,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
+                      Tab(icon: Icon(Icons.shopping_basket)),
+                      Tab(
+                        icon: Image.asset(
+                          grocery_ic_outline_favourite,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
+                      Tab(
+                        icon: Image.asset(
+                          Grocery_ic_User,
+                          color: grocery_color_white,
+                          height: 20,
+                          width: 20,
+                        ),
                       ),
                     ],
                   ),
-                  bottom: TabBar(
-                    indicatorColor: grocery_color_white,
-                    tabs: _role == "Shipper"
-                        ? const [
-                      Tab(icon: Icon(Icons.home)),
-                      Tab(icon: Icon(Icons.shopping_basket)),
-                      Tab(icon: Icon(Icons.favorite_border)),
-                      Tab(icon: Icon(Icons.delivery_dining)), // chỉ shipper có
-                      Tab(icon: Icon(Icons.person)),
-                    ]
-                        : const [
-                      Tab(icon: Icon(Icons.home)),
-                      Tab(icon: Icon(Icons.shopping_basket)),
-                      Tab(icon: Icon(Icons.favorite_border)),
-                      Tab(icon: Icon(Icons.person)), // không có tab shipper
-                    ],
-                  ),
                 ),
-                body: RefreshIndicator(
-                  onRefresh: reloadUserRole,
-                  child: _role == "Shipper"
-                      ? TabBarView(
-                    children: [
-                      HomePage(),
-                      const CartPage(), // ✅ hoạt động bình thường
-                      FavoritePage(),
-                      ShipperOrdersPage(),
-                      ProfilePage(),
-                    ],
-                  )
-                      : TabBarView(
-                    children: [
-                      HomePage(),
-                      const CartPage(), // ✅ hiển thị đủ nút mua hàng
-                      FavoritePage(),
-                      ProfilePage(),
-                    ],
-                  ),
+                body: TabBarView(
+                  controller: _tabController,
+                  children: <Widget>[
+                    HomePage(),
+                    CartPage(onOrderCompleted: _loadUnreadCount),
+                    FavoritePage(),
+                    ProfilePage(),
+                  ],
                 ),
-
-
               );
             },
+
           ),
         ),
       ),
     );
-
   }
 }
